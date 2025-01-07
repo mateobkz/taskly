@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from "recharts";
 import { Task } from "@/types/task";
 import { useToast } from "@/components/ui/use-toast";
+import { motion } from "framer-motion";
 
 interface ChartSectionProps {
   tasks: Task[];
@@ -15,6 +16,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   const { toast } = useToast();
 
   const getDifficultyData = () => {
+    console.log("Calculating difficulty data from tasks:", tasks);
     const difficultyCount = {
       Low: tasks.filter(t => t.difficulty === 'Low').length,
       Medium: tasks.filter(t => t.difficulty === 'Medium').length,
@@ -29,6 +31,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   };
 
   const getTimeSpentData = () => {
+    console.log("Calculating time spent data");
     const last7Days = [...Array(7)].map((_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -46,6 +49,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   };
 
   const getSkillsData = () => {
+    console.log("Calculating skills data");
     const skillCount: { [key: string]: number } = {};
     tasks.forEach(task => {
       task.skills_acquired.split(',').forEach(skill => {
@@ -72,22 +76,40 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
     });
   };
 
-  const COLORS = ['#22C55E', '#EAB308', '#EF4444'];
-  const HOVER_COLORS = ['#16A34A', '#CA8A04', '#DC2626'];
+  const COLORS = {
+    Low: '#22C55E',
+    Medium: '#EAB308',
+    High: '#EF4444'
+  };
+
+  const HOVER_COLORS = {
+    Low: '#16A34A',
+    Medium: '#CA8A04',
+    High: '#DC2626'
+  };
 
   return (
-    <Card className="col-span-2 transition-all duration-300 hover:shadow-lg animate-fade-in">
+    <Card className="col-span-2 transition-all duration-300 hover:shadow-lg animate-fade-in bg-white/50 backdrop-blur-sm border-2">
       <CardHeader>
-        <CardTitle>Analytics</CardTitle>
+        <CardTitle className="text-2xl font-bold">Analytics</CardTitle>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="difficulty" className="transition-all duration-200 data-[state=active]:bg-accent">
+          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+            <TabsTrigger 
+              value="difficulty" 
+              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+            >
               Difficulty Distribution
             </TabsTrigger>
-            <TabsTrigger value="time" className="transition-all duration-200 data-[state=active]:bg-accent">
+            <TabsTrigger 
+              value="time" 
+              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+            >
               Time Spent
             </TabsTrigger>
-            <TabsTrigger value="skills" className="transition-all duration-200 data-[state=active]:bg-accent">
+            <TabsTrigger 
+              value="skills" 
+              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+            >
               Top Skills
             </TabsTrigger>
           </TabsList>
@@ -95,11 +117,14 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
       </CardHeader>
       <CardContent className="pt-4">
         <div className="h-[300px] w-full">
-          <TabsContent value="difficulty" className="h-full">
+          <TabsContent value="difficulty" className="h-full mt-0">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getDifficultyData()} onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}>
-                <XAxis dataKey="name" />
-                <YAxis />
+              <BarChart 
+                data={getDifficultyData()} 
+                onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
+              >
+                <XAxis dataKey="name" stroke="#000000" />
+                <YAxis stroke="#000000" />
                 <Tooltip 
                   cursor={{ fill: 'rgba(0,0,0,0.1)' }}
                   contentStyle={{ 
@@ -113,7 +138,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                   {getDifficultyData().map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={selectedFilter === entry.name ? HOVER_COLORS[index] : COLORS[index]}
+                      fill={selectedFilter === entry.name ? HOVER_COLORS[entry.name as keyof typeof HOVER_COLORS] : COLORS[entry.name as keyof typeof COLORS]}
                       className="transition-colors duration-300 hover:opacity-80 cursor-pointer"
                     />
                   ))}
@@ -122,11 +147,11 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="time" className="h-full">
+          <TabsContent value="time" className="h-full mt-0">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={getTimeSpentData()}>
-                <XAxis dataKey="date" />
-                <YAxis />
+                <XAxis dataKey="date" stroke="#000000" />
+                <YAxis stroke="#000000" />
                 <Tooltip 
                   cursor={{ stroke: '#94A3B8' }}
                   contentStyle={{ 
@@ -156,14 +181,14 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="skills" className="h-full">
+          <TabsContent value="skills" className="h-full mt-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={getSkillsData()}
                 onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
               >
-                <XAxis dataKey="name" />
-                <YAxis />
+                <XAxis dataKey="name" stroke="#000000" />
+                <YAxis stroke="#000000" />
                 <Tooltip 
                   cursor={{ fill: 'rgba(0,0,0,0.1)' }}
                   contentStyle={{ 

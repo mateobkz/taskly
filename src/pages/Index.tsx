@@ -1,6 +1,6 @@
 import React from "react";
 import Dashboard from "@/components/Dashboard";
-import TaskForm from "@/components/TaskForm";
+import TaskForm from "@/components/TaskFormNew";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 
@@ -18,9 +18,19 @@ const Index = () => {
     <div className="container py-8">
       <Tabs defaultValue="dashboard" className="space-y-6">
         <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:space-y-0">
-          <TabsList>
-            <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="add-task">Add Task</TabsTrigger>
+          <TabsList className="bg-white/50 backdrop-blur-sm">
+            <TabsTrigger 
+              value="dashboard"
+              className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+            >
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger 
+              value="add-task"
+              className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+            >
+              Add Task
+            </TabsTrigger>
           </TabsList>
         </div>
         
