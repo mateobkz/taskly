@@ -22,35 +22,31 @@ const Auth = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col items-center justify-center bg-gradient-to-br from-[#0EA5E9] via-[#8B5CF6] to-[#D946EF] py-12 px-4 sm:px-6 lg:px-8">
-      {/* Animated background elements */}
+    <div className="min-h-screen relative flex flex-col items-center justify-center bg-gradient-to-br from-[#1A1F2C] via-[#2C3444] to-[#1A1F2C] py-12 px-4 sm:px-6 lg:px-8">
+      {/* Subtle animated background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -inset-[100%] opacity-50">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#8B5CF6] rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-1/4 right-1/4 w-[600px] h-[600px] bg-[#D946EF] rounded-full blur-3xl animate-pulse delay-700"></div>
-          <div className="absolute bottom-1/4 left-1/4 w-[700px] h-[700px] bg-[#0EA5E9] rounded-full blur-3xl animate-pulse delay-1000"></div>
-        </div>
+        <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(155,135,245,0.05)_50%,transparent_75%)] bg-[length:20px_20px] animate-[pulse_8s_linear_infinite]"></div>
       </div>
 
       {/* Content */}
-      <div className="relative flex flex-col items-center mb-8 animate-fade-in">
-        <div className="p-4 bg-white bg-opacity-10 backdrop-blur-lg rounded-full mb-6 shadow-xl transform hover:scale-105 transition-transform duration-300">
-          <BookType className="w-14 h-14 text-white" />
+      <div className="relative flex flex-col items-center mb-12 animate-fade-in">
+        <div className="p-4 bg-gradient-to-br from-[#9b87f5] to-[#7E69AB] rounded-2xl mb-6 shadow-lg transform hover:scale-105 transition-all duration-300">
+          <BookType className="w-12 h-12 text-white" />
         </div>
-        <h1 className="text-5xl font-bold text-white mb-2 tracking-tight">Task Tracker</h1>
-        <p className="text-lg text-white/80">Organize. Track. Achieve.</p>
+        <h1 className="text-4xl font-bold text-white mb-2 tracking-tight">Task Tracker</h1>
+        <p className="text-base text-[#C8C8C9]">Professional Task Management</p>
       </div>
       
-      <Card className="w-full max-w-md space-y-8 bg-white/10 backdrop-blur-md border-white/20 shadow-2xl animate-scale">
-        <CardHeader>
-          <CardTitle className="text-center text-2xl font-bold text-white">
+      <Card className="w-full max-w-md bg-[#221F26]/40 backdrop-blur-md border-[#403E43]/20 shadow-2xl animate-scale">
+        <CardHeader className="space-y-2">
+          <CardTitle className="text-center text-2xl font-medium text-white">
             Welcome Back
           </CardTitle>
         </CardHeader>
         <CardContent>
           {errorMessage && (
-            <Alert variant="destructive" className="mb-4 bg-red-500/10 border-red-500/20">
-              <AlertDescription className="text-white">{errorMessage}</AlertDescription>
+            <Alert variant="destructive" className="mb-6 bg-red-500/5 border border-red-500/10">
+              <AlertDescription className="text-red-200">{errorMessage}</AlertDescription>
             </Alert>
           )}
           <SupabaseAuth 
@@ -60,21 +56,21 @@ const Auth = () => {
               variables: {
                 default: {
                   colors: {
-                    brand: 'rgb(139, 92, 246)',
-                    brandAccent: 'rgb(217, 70, 239)',
-                    inputBackground: 'rgba(255, 255, 255, 0.1)',
-                    inputText: 'white',
-                    inputPlaceholder: 'rgba(255, 255, 255, 0.5)',
+                    brand: '#9b87f5',
+                    brandAccent: '#7E69AB',
+                    inputBackground: 'rgba(255, 255, 255, 0.05)',
+                    inputText: '#E5DEFF',
+                    inputPlaceholder: 'rgba(229, 222, 255, 0.4)',
                   },
                 },
               },
               className: {
-                container: 'animate-fade-in',
-                button: 'bg-white/10 hover:bg-white/20 backdrop-blur-lg text-white border-white/20 transition-all duration-200',
-                label: 'text-sm font-medium text-white/80',
-                input: 'mt-1 block w-full rounded-lg border border-white/20 bg-white/10 backdrop-blur-lg px-3 py-2 text-white placeholder-white/50 shadow-sm focus:border-white/40 focus:outline-none focus:ring-2 focus:ring-white/20 transition-all duration-200',
-                loader: 'text-white',
-                anchor: 'text-white/80 hover:text-white transition-colors duration-200',
+                container: 'animate-fade-in space-y-4',
+                button: 'bg-gradient-to-r from-[#9b87f5] to-[#7E69AB] hover:opacity-90 text-white border-0 transition-all duration-200',
+                label: 'text-sm font-medium text-[#E5DEFF]',
+                input: 'mt-1 block w-full rounded-lg border border-[#403E43] bg-[#221F26]/60 px-3 py-2 text-[#E5DEFF] placeholder-[#E5DEFF]/40 shadow-sm focus:border-[#9b87f5] focus:ring-1 focus:ring-[#9b87f5] transition-all duration-200',
+                loader: 'text-[#E5DEFF]',
+                anchor: 'text-[#9b87f5] hover:text-[#7E69AB] transition-colors duration-200',
               },
             }}
             providers={[]}
