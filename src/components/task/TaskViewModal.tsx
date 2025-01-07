@@ -18,7 +18,7 @@ const TaskSection = ({ icon: Icon, title, content }: { icon: any, title: string,
       <Icon className="h-4 w-4" />
       <h4 className="font-medium">{title}</h4>
     </div>
-    <p className="text-sm pl-6">{content}</p>
+    <p className="text-sm pl-6 text-gray-700 whitespace-pre-wrap">{content}</p>
     <Separator className="my-4" />
   </div>
 )
@@ -50,11 +50,11 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl p-6 relative">
-        <DialogHeader>
-          <DialogTitle>{task.title}</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-6 bg-white">
+        <DialogHeader className="space-y-2">
+          <DialogTitle className="text-2xl font-bold">{task.title}</DialogTitle>
           <DialogDescription>
-            View detailed information about this task
+            Detailed information about this task
           </DialogDescription>
         </DialogHeader>
         
@@ -67,7 +67,7 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
           <X className="h-4 w-4" />
         </Button>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -78,7 +78,7 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
               <span className="text-sm text-muted-foreground">
                 {formatDuration(task.duration_minutes)}
               </span>
-              <Badge className={getDifficultyColor(task.difficulty)}>
+              <Badge className={`${getDifficultyColor(task.difficulty)} ml-2`}>
                 {task.difficulty}
               </Badge>
             </div>

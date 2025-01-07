@@ -17,7 +17,6 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
       new Date(task.date_completed) >= oneWeekAgo
     );
     
-    // Assuming a goal of 10 tasks per week
     const progress = Math.min((weeklyTasks.length / 10) * 100, 100);
     return Math.round(progress);
   };
@@ -28,16 +27,16 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-sm">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1">
             <div className="space-y-2">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary">
                   Welcome, Mateo! Keep up the great work!
                 </h1>
                 <img 
                   src="/lovable-uploads/8705599b-73a8-4967-8c21-fd6f78dd12dd.png" 
                   alt="Amazon Logo" 
-                  className="h-8 object-contain"
+                  className="h-8 object-contain ml-8"
                 />
               </div>
               <p className="text-muted-foreground">
