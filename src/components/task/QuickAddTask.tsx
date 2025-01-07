@@ -19,10 +19,13 @@ import {
 import { Plus } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
+import { Database } from "@/integrations/supabase/types"
 
 interface QuickAddTaskProps {
   onTaskAdded: () => void;
 }
+
+type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"]
 
 const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const { toast } = useToast()
@@ -30,7 +33,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
-    difficulty: "",
+    difficulty: "" as DifficultyLevel,
     date_completed: new Date().toISOString().split('T')[0],
     description: "Quick task entry",
     skills_acquired: "",
@@ -60,7 +63,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
       setFormData({
         ...formData,
         title: "",
-        difficulty: "",
+        difficulty: "" as DifficultyLevel,
         skills_acquired: "",
       })
     } catch (error) {
@@ -105,7 +108,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
             <Label htmlFor="difficulty">Difficulty Level</Label>
             <Select
               value={formData.difficulty}
-              onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
+              onValueChange={(value: DifficultyLevel) => setFormData({ ...formData, difficulty: value })}
               required
             >
               <SelectTrigger>
