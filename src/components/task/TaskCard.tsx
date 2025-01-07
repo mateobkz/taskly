@@ -31,7 +31,7 @@ const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
     >
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <h3 className="font-medium group-hover:text-accent-foreground transition-colors">
+          <h3 className="font-medium text-black group-hover:text-black transition-colors">
             {task.title}
           </h3>
           <Badge className={getDifficultyColor(task.difficulty)}>

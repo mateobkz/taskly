@@ -167,7 +167,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="duration_minutes">Duration</Label>
+              <Label htmlFor="duration_minutes">Duration (minutes)</Label>
               <Input 
                 id="duration_minutes"
                 name="duration_minutes"

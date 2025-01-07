@@ -1,25 +1,12 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Clock } from "lucide-react";
 import { Task } from "@/types/task";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line } from "recharts";
 
 interface MonthlyStatsProps {
   tasks: Task[];
 }
-
-const getDifficultyColor = (difficulty: string) => {
-  switch (difficulty.toLowerCase()) {
-    case 'low':
-      return '#22C55E';
-    case 'medium':
-      return '#EAB308';
-    case 'high':
-      return '#EF4444';
-    default:
-      return '#8884d8';
-  }
-};
 
 const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
   const difficultyCount = {
@@ -29,10 +16,26 @@ const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
   };
 
   const chartData = [
-    { name: 'Low', value: difficultyCount.Low, color: getDifficultyColor('low') },
-    { name: 'Medium', value: difficultyCount.Medium, color: getDifficultyColor('medium') },
-    { name: 'High', value: difficultyCount.High, color: getDifficultyColor('high') },
+    { name: 'Low', value: difficultyCount.Low },
+    { name: 'Medium', value: difficultyCount.Medium },
+    { name: 'High', value: difficultyCount.High },
   ];
+
+  // Calculate hours spent per day for the last 7 days
+  const last7Days = [...Array(7)].map((_, i) => {
+    const date = new Date();
+    date.setDate(date.getDate() - i);
+    return date.toISOString().split('T')[0];
+  }).reverse();
+
+  const hoursData = last7Days.map(date => {
+    const dayTasks = tasks.filter(task => task.date_completed === date);
+    const totalMinutes = dayTasks.reduce((acc, task) => acc + task.duration_minutes, 0);
+    return {
+      date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
+      hours: Number((totalMinutes / 60).toFixed(1))
+    };
+  });
 
   return (
     <Card className="bg-blue-50/50 transition-all duration-200 hover:shadow-md">
@@ -43,7 +46,7 @@ const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="h-[200px] w-full">
+        <div className="h-[200px] w-full mb-6">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData}>
               <XAxis dataKey="name" />
@@ -51,16 +54,41 @@ const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
               <Tooltip />
               <Bar dataKey="value">
                 {chartData.map((entry, index) => (
-                  <Bar
-                    key={`cell-${index}`}
-                    dataKey="value"
-                    fill={entry.color}
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={
+                      entry.name === 'Low' ? '#22C55E' : 
+                      entry.name === 'Medium' ? '#EAB308' : 
+                      '#EF4444'
+                    } 
                   />
                 ))}
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
+
+        <div className="h-[200px] w-full mb-4">
+          <div className="flex items-center mb-2">
+            <Clock className="mr-2 h-4 w-4" />
+            <h3 className="text-sm font-medium">Hours Spent (Last 7 Days)</h3>
+          </div>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={hoursData}>
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Line 
+                type="monotone" 
+                dataKey="hours" 
+                stroke="#3B82F6" 
+                strokeWidth={2}
+                dot={{ fill: '#3B82F6' }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
         <div className="space-y-2 mt-4">
           <div className="text-sm flex justify-between">
             <span>Total Tasks:</span>
