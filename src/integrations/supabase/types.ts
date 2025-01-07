@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      tasks: {
+        Row: {
+          created_at: string
+          date_completed: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          id: number
+          key_challenges: string
+          key_takeaways: string
+          skills_acquired: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date_completed: string
+          description: string
+          difficulty: Database["public"]["Enums"]["difficulty_level"]
+          id?: number
+          key_challenges: string
+          key_takeaways: string
+          skills_acquired: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date_completed?: string
+          description?: string
+          difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          id?: number
+          key_challenges?: string
+          key_takeaways?: string
+          skills_acquired?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +56,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      difficulty_level: "Low" | "Medium" | "High"
     }
     CompositeTypes: {
       [_ in never]: never
