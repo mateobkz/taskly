@@ -1,5 +1,5 @@
 import React from "react";
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from "recharts";
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Task } from "@/types/task";
 
 interface ProgressChartProps {
@@ -21,36 +21,45 @@ const ProgressChart = ({ tasks }: ProgressChartProps) => {
   };
 
   return (
-    <ResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={getProgressData()}
-          cx="50%"
-          cy="50%"
-          innerRadius={60}
-          outerRadius={80}
-          paddingAngle={5}
-          dataKey="value"
-        >
-          {getProgressData().map((entry, index) => (
-            <Cell 
-              key={`cell-${index}`}
-              fill={entry.color}
-              className="transition-opacity duration-300 hover:opacity-80"
-            />
-          ))}
-        </Pie>
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'white',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            padding: '8px'
-          }}
-          formatter={(value: any) => [`${value} Tasks`, '']}
-        />
-      </PieChart>
-    </ResponsiveContainer>
+    <div className="relative h-full">
+      <div className="absolute top-0 left-0 w-full text-center text-sm text-gray-500">
+        Task Completion Status
+      </div>
+      <ResponsiveContainer width="100%" height="100%">
+        <PieChart>
+          <Pie
+            data={getProgressData()}
+            cx="50%"
+            cy="50%"
+            innerRadius={60}
+            outerRadius={80}
+            paddingAngle={5}
+            dataKey="value"
+          >
+            {getProgressData().map((entry, index) => (
+              <Cell 
+                key={`cell-${index}`}
+                fill={entry.color}
+                className="transition-opacity duration-300 hover:opacity-80"
+              />
+            ))}
+          </Pie>
+          <Tooltip 
+            contentStyle={{ 
+              backgroundColor: 'white',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              padding: '8px'
+            }}
+            formatter={(value: any) => [`${value} Tasks`, '']}
+          />
+          <Legend 
+            verticalAlign="bottom" 
+            height={36}
+          />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
   );
 };
 

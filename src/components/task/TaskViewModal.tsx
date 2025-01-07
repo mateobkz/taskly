@@ -1,5 +1,5 @@
 import React from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { ModalCard } from "@/components/ui/modal-card"
 import { Task } from "@/types/task"
 import { Badge } from "@/components/ui/badge"
@@ -52,6 +52,13 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl p-6 relative">
+        <DialogHeader>
+          <DialogTitle>{task.title}</DialogTitle>
+          <DialogDescription>
+            View detailed information about this task
+          </DialogDescription>
+        </DialogHeader>
+        
         <Button
           variant="ghost"
           size="icon"
@@ -60,9 +67,8 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
         >
           <X className="h-4 w-4" />
         </Button>
-        <div className="space-y-4">
-          <h2 className="text-2xl font-semibold">{task.title}</h2>
-          
+
+        <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
@@ -71,7 +77,7 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-muted-foreground" />
               <span className="text-sm text-muted-foreground">
-                {task.duration_minutes} minutes
+                {formatDuration(task.duration_minutes)}
               </span>
               <Badge className={getDifficultyColor(task.difficulty)}>
                 {task.difficulty}
