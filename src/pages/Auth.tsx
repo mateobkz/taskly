@@ -24,7 +24,7 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center mb-8">
-        <div className="p-3 bg-emerald-500 rounded-full mb-4 animate-fade-in">
+        <div className="p-3 bg-secondary rounded-full mb-4 animate-fade-in">
           <BookType className="w-12 h-12 text-white" />
         </div>
         <h1 className="text-4xl font-bold text-primary animate-fade-in">Task Tracker</h1>
