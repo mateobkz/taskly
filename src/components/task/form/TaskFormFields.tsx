@@ -10,7 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Target, Book, Brain, Clock } from "lucide-react";
+import { Target, Book, Brain, Clock, AlertTriangle, Lightbulb } from "lucide-react";
 
 interface TaskFormFieldsProps {
   formData: any;
@@ -60,6 +60,22 @@ const TaskFormFields = ({ formData, handleChange }: TaskFormFieldsProps) => (
           value={formData.description}
           onChange={handleChange}
           placeholder="Describe what you did in detail"
+          className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
+          required
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="key_challenges" className="flex items-center gap-2">
+          <AlertTriangle className="w-4 h-4 text-blue-500" />
+          Key Challenges
+        </Label>
+        <Textarea
+          id="key_challenges"
+          name="key_challenges"
+          value={formData.key_challenges}
+          onChange={handleChange}
+          placeholder="What difficulties did you face?"
           className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
           required
         />
@@ -143,6 +159,22 @@ const TaskFormFields = ({ formData, handleChange }: TaskFormFieldsProps) => (
           placeholder="E.g., Python, SQL, Data Visualization"
           className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
           required 
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="key_takeaways" className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-blue-500" />
+          Key Takeaways
+        </Label>
+        <Textarea
+          id="key_takeaways"
+          name="key_takeaways"
+          value={formData.key_takeaways}
+          onChange={handleChange}
+          placeholder="What were your main learnings?"
+          className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
+          required
         />
       </div>
     </div>

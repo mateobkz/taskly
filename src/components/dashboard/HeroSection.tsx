@@ -30,9 +30,16 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
         <div className="flex items-start justify-between">
           <div className="space-y-4">
             <div className="space-y-2">
-              <h1 className="text-3xl font-bold text-primary">
-                Welcome, Mateo! Keep up the great work!
-              </h1>
+              <div className="flex items-center gap-4">
+                <h1 className="text-3xl font-bold text-primary">
+                  Welcome, Mateo! Keep up the great work!
+                </h1>
+                <img 
+                  src="/lovable-uploads/8705599b-73a8-4967-8c21-fd6f78dd12dd.png" 
+                  alt="Amazon Logo" 
+                  className="h-8 object-contain"
+                />
+              </div>
               <p className="text-muted-foreground">
                 Track your learning journey and celebrate your progress
               </p>

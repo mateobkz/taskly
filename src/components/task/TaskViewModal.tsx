@@ -1,6 +1,5 @@
 import React from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { ModalCard } from "@/components/ui/modal-card"
 import { Task } from "@/types/task"
 import { Badge } from "@/components/ui/badge"
 import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb, Clock, X } from "lucide-react"
