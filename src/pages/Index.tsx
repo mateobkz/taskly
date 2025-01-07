@@ -1,12 +1,23 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import React from "react";
+import Dashboard from "@/components/Dashboard";
+import TaskForm from "@/components/TaskForm";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Index = () => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="container py-8">
+      <Tabs defaultValue="dashboard">
+        <TabsList className="mb-8">
+          <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+          <TabsTrigger value="add-task">Add Task</TabsTrigger>
+        </TabsList>
+        <TabsContent value="dashboard">
+          <Dashboard />
+        </TabsContent>
+        <TabsContent value="add-task">
+          <TaskForm />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
