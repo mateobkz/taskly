@@ -17,6 +17,7 @@ import RecentSkills from "./dashboard/RecentSkills";
 import MonthlyStats from "./dashboard/MonthlyStats";
 import TaskList from "./dashboard/TaskList";
 import { Task } from "@/types/task";
+import { Badge } from "@/components/ui/badge";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -113,22 +114,30 @@ const Dashboard = () => {
     };
   };
 
-  const weeklySummary = getWeeklySummary();
-  const allSkills = Array.from(new Set(tasks.flatMap(task => 
-    task.skills_acquired.split(',').map(skill => skill.trim())
-  )));
+  const getDifficultyColor = (difficulty: string) => {
+    switch (difficulty.toLowerCase()) {
+      case 'low':
+        return 'bg-green-100 text-green-800 hover:bg-green-200';
+      case 'medium':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+      case 'high':
+        return 'bg-red-100 text-red-800 hover:bg-red-200';
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
+    }
+  };
 
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Welcome, Mateo!</h1>
         <div className="flex gap-2">
-          <Button variant="outline">
+          <Button variant="outline" className="transition-all duration-200 hover:bg-accent hover:text-accent-foreground">
             <Calendar className="mr-2 h-4 w-4" /> This Week
           </Button>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline">
+              <Button variant="outline" className="transition-all duration-200 hover:bg-accent hover:text-accent-foreground">
                 <Filter className="mr-2 h-4 w-4" /> Filters
               </Button>
             </PopoverTrigger>
@@ -140,20 +149,26 @@ const Dashboard = () => {
                     placeholder="Search by title or skill..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
+                    className="transition-all duration-200 focus:ring-2 focus:ring-accent"
                   />
                 </div>
                 <div>
                   <h4 className="font-medium mb-2">Filter by Difficulty</h4>
                   <div className="flex gap-2">
                     {["Low", "Medium", "High"].map((diff) => (
-                      <Button
+                      <Badge
                         key={diff}
-                        variant={selectedDifficulty === diff ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => setSelectedDifficulty(diff === selectedDifficulty ? null : diff as 'Low' | 'Medium' | 'High')}
+                        className={`cursor-pointer transition-all duration-200 ${
+                          selectedDifficulty === diff 
+                            ? getDifficultyColor(diff)
+                            : 'bg-muted hover:bg-accent/20'
+                        }`}
+                        onClick={() => setSelectedDifficulty(
+                          diff === selectedDifficulty ? null : diff as 'Low' | 'Medium' | 'High'
+                        )}
                       >
                         {diff}
-                      </Button>
+                      </Badge>
                     ))}
                   </div>
                 </div>
@@ -164,8 +179,10 @@ const Dashboard = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <WeeklySummary {...weeklySummary} />
-        <RecentSkills skills={allSkills} />
+        <WeeklySummary {...getWeeklySummary()} />
+        <RecentSkills skills={Array.from(new Set(tasks.flatMap(task => 
+          task.skills_acquired.split(',').map(skill => skill.trim())
+        )))} />
         <MonthlyStats tasks={tasks} />
       </div>
 

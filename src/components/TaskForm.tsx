@@ -12,12 +12,33 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface TaskFormProps {
   onTaskAdded?: () => void;
   initialData?: any;
   isEditing?: boolean;
 }
+
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty.toLowerCase()) {
+    case 'low':
+      return 'bg-green-100 text-green-800';
+    case 'medium':
+      return 'bg-yellow-100 text-yellow-800';
+    case 'high':
+      return 'bg-red-100 text-red-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
 const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
   const { toast } = useToast();
@@ -73,7 +94,6 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
       }
       
       if (!isEditing) {
-        // Reset form only for new tasks
         setFormData({
           title: "",
           description: "",
@@ -96,100 +116,138 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
-      <div className="space-y-2">
-        <Label htmlFor="title">Task Title</Label>
-        <Input 
-          id="title"
-          name="title"
-          value={formData.title}
-          onChange={handleChange}
-          placeholder="Brief description of the task"
-          required 
-        />
-      </div>
+      <Card className="transition-all duration-200">
+        <CardHeader>
+          <CardTitle>Task Details</CardTitle>
+          <CardDescription>
+            Record your learning journey and track your progress
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="title">Task Title</Label>
+            <Input 
+              id="title"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="What did you accomplish?"
+              className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+              required 
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="description">Task Description</Label>
-        <Textarea
-          id="description"
-          name="description"
-          value={formData.description}
-          onChange={handleChange}
-          placeholder="Detailed explanation of what you did"
-          className="min-h-[100px]"
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="description">Task Description</Label>
+            <Textarea
+              id="description"
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Describe what you did in detail"
+              className="min-h-[100px] transition-all duration-200 focus:ring-2 focus:ring-accent"
+              required
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="date_completed">Date Completed</Label>
-        <Input 
-          id="date_completed"
-          name="date_completed"
-          type="date"
-          value={formData.date_completed}
-          onChange={handleChange}
-          required 
-        />
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="date_completed">Date Completed</Label>
+              <Input 
+                id="date_completed"
+                name="date_completed"
+                type="date"
+                value={formData.date_completed}
+                onChange={handleChange}
+                className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+                required 
+              />
+            </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="skills_acquired">Skills Acquired</Label>
-        <Input 
-          id="skills_acquired"
-          name="skills_acquired"
-          value={formData.skills_acquired}
-          onChange={handleChange}
-          placeholder="E.g., SQL, Data Visualization (comma-separated)"
-          required 
-        />
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="difficulty">Difficulty Level</Label>
+              <Select 
+                value={formData.difficulty} 
+                onValueChange={(value) => handleChange(value, 'difficulty')}
+                required
+              >
+                <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-accent">
+                  <SelectValue placeholder="Select difficulty" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Low">
+                    <Badge className={getDifficultyColor('Low')}>Low</Badge>
+                  </SelectItem>
+                  <SelectItem value="Medium">
+                    <Badge className={getDifficultyColor('Medium')}>Medium</Badge>
+                  </SelectItem>
+                  <SelectItem value="High">
+                    <Badge className={getDifficultyColor('High')}>High</Badge>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="difficulty">Difficulty Level</Label>
-        <Select 
-          value={formData.difficulty} 
-          onValueChange={(value) => handleChange(value, 'difficulty')}
-          required
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Low">Low</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="High">High</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="skills_acquired">Skills Acquired</Label>
+            <Input 
+              id="skills_acquired"
+              name="skills_acquired"
+              value={formData.skills_acquired}
+              onChange={handleChange}
+              placeholder="E.g., Python, SQL, Data Visualization (comma-separated)"
+              className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+              required 
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="key_challenges">Key Challenges</Label>
-        <Textarea
-          id="key_challenges"
-          name="key_challenges"
-          value={formData.key_challenges}
-          onChange={handleChange}
-          placeholder="What difficulties did you face while completing this task?"
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="key_challenges">Key Challenges</Label>
+            <Textarea
+              id="key_challenges"
+              name="key_challenges"
+              value={formData.key_challenges}
+              onChange={handleChange}
+              placeholder="What difficulties did you face? How did you overcome them?"
+              className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+              required
+            />
+          </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="key_takeaways">Key Takeaways</Label>
-        <Textarea
-          id="key_takeaways"
-          name="key_takeaways"
-          value={formData.key_takeaways}
-          onChange={handleChange}
-          placeholder="What did you learn? What were the significant outcomes?"
-          required
-        />
-      </div>
+          <div className="space-y-2">
+            <Label htmlFor="key_takeaways">Key Takeaways</Label>
+            <Textarea
+              id="key_takeaways"
+              name="key_takeaways"
+              value={formData.key_takeaways}
+              onChange={handleChange}
+              placeholder="What were your main learnings from this task?"
+              className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+              required
+            />
+          </div>
 
-      <Button type="submit" className="w-full">
-        {isEditing ? "Update Task" : "Add Task"}
-      </Button>
+          <div className="flex justify-end gap-4">
+            {isEditing && (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onTaskAdded?.()}
+                className="transition-all duration-200 hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Cancel
+              </Button>
+            )}
+            <Button 
+              type="submit"
+              className="transition-all duration-200 hover:bg-accent hover:text-accent-foreground"
+            >
+              {isEditing ? "Save Changes" : "Add Task"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </form>
   );
 };
