@@ -18,6 +18,7 @@ import MonthlyStats from "./dashboard/MonthlyStats";
 import TaskList from "./dashboard/TaskList";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
+import { getDifficultyColor } from "@/lib/utils/difficulty";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
