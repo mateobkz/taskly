@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { BookType } from "lucide-react";
+import { Check } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -24,8 +24,12 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center mb-8">
-        <div className="p-3 bg-primary rounded-full mb-4 animate-fade-in">
-          <BookType className="w-12 h-12 text-white" />
+        <div className="p-3 bg-emerald-500 rounded-full mb-4 animate-fade-in">
+          <img 
+            src="/lovable-uploads/120a6987-17ba-47d5-9838-d728a4ce9176.png" 
+            alt="Task Tracker Logo" 
+            className="w-12 h-12"
+          />
         </div>
         <h1 className="text-4xl font-bold text-primary animate-fade-in">Task Tracker</h1>
       </div>
@@ -59,16 +63,6 @@ const Auth = () => {
                 button: 'bg-primary hover:bg-primary/90',
                 label: 'text-sm font-medium text-gray-700',
                 input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
-              },
-            }}
-            localization={{
-              variables: {
-                sign_in: {
-                  email_label: 'Username',
-                  email_input_placeholder: 'Enter your username',
-                  password_label: 'Password',
-                  button_label: 'Sign In',
-                },
               },
             }}
             providers={[]}

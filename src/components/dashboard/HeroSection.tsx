@@ -1,14 +1,27 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Trophy } from "lucide-react";
 import { Task } from "@/types/task";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HeroSectionProps {
   tasks: Task[];
 }
 
 const HeroSection = ({ tasks }: HeroSectionProps) => {
+  const [userEmail, setUserEmail] = useState<string>("");
+
+  useEffect(() => {
+    const getUserEmail = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserEmail(user.email || "");
+      }
+    };
+    getUserEmail();
+  }, []);
+
   const calculateWeeklyProgress = () => {
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
@@ -23,6 +36,20 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
 
   const progress = calculateWeeklyProgress();
 
+  const getFirstName = (email: string) => {
+    if (email === "aysel.martinez@alumni.esade.edu") {
+      return "Aysel";
+    }
+    return "Mateo";
+  };
+
+  const getCompanyLogo = (email: string) => {
+    if (email === "aysel.martinez@alumni.esade.edu") {
+      return "/lovable-uploads/9ffe8aca-7316-4ca9-8874-f1666475daf5.png";
+    }
+    return "/lovable-uploads/8705599b-73a8-4967-8c21-fd6f78dd12dd.png";
+  };
+
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-sm">
       <CardContent className="p-6">
@@ -31,11 +58,11 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary">
-                  Welcome, Mateo! Keep up the great work!
+                  Welcome, {getFirstName(userEmail)}! Keep up the great work!
                 </h1>
                 <img 
-                  src="/lovable-uploads/8705599b-73a8-4967-8c21-fd6f78dd12dd.png" 
-                  alt="Amazon Logo" 
+                  src={getCompanyLogo(userEmail)} 
+                  alt="Company Logo" 
                   className="h-8 object-contain ml-8"
                 />
               </div>
