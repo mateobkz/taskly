@@ -35,6 +35,28 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+const formatDateRange = (startDate: string, endDate: string) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+  
+  if (startDate === endDate) {
+    return new Date(startDate).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  }
+  
+  return `${start.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric'
+  })}–${end.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric'
+  })}`;
+};
+
 const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
   return (
     <div 
@@ -51,11 +73,7 @@ const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
         </div>
         
         <p className="text-sm text-gray-600">
-          {new Date(task.date_completed).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-          })}
+          {formatDateRange(task.date_started, task.date_ended)}
         </p>
         
         <div className="flex flex-wrap gap-2">
@@ -126,7 +144,7 @@ const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TaskCard
+export default TaskCard;

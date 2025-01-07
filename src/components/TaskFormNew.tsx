@@ -18,7 +18,9 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
   const [formData, setFormData] = useState({
     title: initialData?.title || "",
     description: initialData?.description || "",
-    date_completed: initialData?.date_completed || "",
+    date_started: initialData?.date_started || new Date().toISOString().split('T')[0],
+    date_ended: initialData?.date_ended || new Date().toISOString().split('T')[0],
+    date_completed: initialData?.date_completed || new Date().toISOString().split('T')[0], // Keep for backward compatibility
     skills_acquired: initialData?.skills_acquired || "",
     difficulty: initialData?.difficulty || "",
     key_challenges: initialData?.key_challenges || "",
@@ -85,7 +87,9 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
         setFormData({
           title: "",
           description: "",
-          date_completed: "",
+          date_started: new Date().toISOString().split('T')[0],
+          date_ended: new Date().toISOString().split('T')[0],
+          date_completed: new Date().toISOString().split('T')[0],
           skills_acquired: "",
           difficulty: "",
           key_challenges: "",

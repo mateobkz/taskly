@@ -37,6 +37,8 @@ export type Database = {
         Row: {
           created_at: string
           date_completed: string
+          date_ended: string
+          date_started: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes: number
@@ -51,6 +53,8 @@ export type Database = {
         Insert: {
           created_at?: string
           date_completed: string
+          date_ended?: string
+          date_started?: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
@@ -65,6 +69,8 @@ export type Database = {
         Update: {
           created_at?: string
           date_completed?: string
+          date_ended?: string
+          date_started?: string
           description?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
