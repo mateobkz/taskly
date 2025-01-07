@@ -5,7 +5,7 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check } from "lucide-react";
+import { BookType } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -25,11 +25,7 @@ const Auth = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="flex flex-col items-center mb-8">
         <div className="p-3 bg-emerald-500 rounded-full mb-4 animate-fade-in">
-          <img 
-            src="/lovable-uploads/120a6987-17ba-47d5-9838-d728a4ce9176.png" 
-            alt="Task Tracker Logo" 
-            className="w-12 h-12"
-          />
+          <BookType className="w-12 h-12 text-white" />
         </div>
         <h1 className="text-4xl font-bold text-primary animate-fade-in">Task Tracker</h1>
       </div>
