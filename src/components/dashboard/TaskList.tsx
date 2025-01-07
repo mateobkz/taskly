@@ -21,15 +21,15 @@ const TaskList = ({ tasks, onEdit, onDelete }: TaskListProps) => {
 
   return (
     <>
-      <Card className="transition-all duration-200 hover:shadow-md">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Recent Tasks</CardTitle>
+      <Card className="transition-all duration-200 hover:shadow-md bg-white/50 backdrop-blur-sm">
+        <CardHeader className="flex flex-row items-center justify-between pb-2">
+          <CardTitle className="text-xl text-gray-800">Recent Tasks</CardTitle>
           {tasks.length > 3 && (
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setShowAllTasks(!showAllTasks)}
-              className="flex items-center gap-1"
+              className="flex items-center gap-1 hover:bg-blue-50"
             >
               {showAllTasks ? (
                 <>Show Less <ChevronUp className="h-4 w-4" /></>
@@ -40,7 +40,7 @@ const TaskList = ({ tasks, onEdit, onDelete }: TaskListProps) => {
           )}
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {displayedTasks.map((task) => (
               <TaskCard
                 key={task.id}

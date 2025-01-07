@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from "recharts";
 import { Task } from "@/types/task";
@@ -11,12 +11,10 @@ interface ChartSectionProps {
 }
 
 const ChartSection = ({ tasks }: ChartSectionProps) => {
-  const [activeTab, setActiveTab] = useState("difficulty");
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const { toast } = useToast();
 
   const getDifficultyData = () => {
-    console.log("Calculating difficulty data from tasks:", tasks);
     const difficultyCount = {
       Low: tasks.filter(t => t.difficulty === 'Low').length,
       Medium: tasks.filter(t => t.difficulty === 'Medium').length,
@@ -31,7 +29,6 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   };
 
   const getTimeSpentData = () => {
-    console.log("Calculating time spent data");
     const last7Days = [...Array(7)].map((_, i) => {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -49,7 +46,6 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   };
 
   const getSkillsData = () => {
-    console.log("Calculating skills data");
     const skillCount: { [key: string]: number } = {};
     tasks.forEach(task => {
       task.skills_acquired.split(',').forEach(skill => {
@@ -64,66 +60,57 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
       .slice(0, 5);
   };
 
+  const COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE'];
+  const HOVER_COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
+
   const handleChartClick = (data: any) => {
     if (!data || !data.name) return;
-    
     const filterValue = data.name;
     setSelectedFilter(prevFilter => prevFilter === filterValue ? null : filterValue);
-    
     toast({
       title: "Filter Applied",
       description: `Showing tasks for ${filterValue}`,
     });
   };
 
-  const COLORS = {
-    Low: '#22C55E',
-    Medium: '#EAB308',
-    High: '#EF4444'
-  };
-
-  const HOVER_COLORS = {
-    Low: '#16A34A',
-    Medium: '#CA8A04',
-    High: '#DC2626'
-  };
-
   return (
     <Card className="col-span-2 transition-all duration-300 hover:shadow-lg animate-fade-in bg-white/50 backdrop-blur-sm border-2">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold">Analytics</CardTitle>
+        <CardTitle className="text-2xl font-bold text-gray-800">Analytics Dashboard</CardTitle>
         <Tabs defaultValue="difficulty" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-4 bg-muted/50">
             <TabsTrigger 
               value="difficulty" 
-              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+              className="transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
             >
-              Difficulty Distribution
+              Task Difficulty
             </TabsTrigger>
             <TabsTrigger 
               value="time" 
-              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+              className="transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
             >
-              Time Spent
+              Time Analysis
             </TabsTrigger>
             <TabsTrigger 
               value="skills" 
-              className="transition-all duration-200 data-[state=active]:bg-blue-400 data-[state=active]:text-white"
+              className="transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
             >
-              Top Skills
+              Skill Distribution
+            </TabsTrigger>
+            <TabsTrigger 
+              value="completion" 
+              className="transition-all duration-200 data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+            >
+              Task Progress
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="difficulty" className="h-[300px] mt-4">
+          <TabsContent value="difficulty" className="h-[300px] mt-6">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={getDifficultyData()} 
-                onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
-              >
+              <BarChart data={getDifficultyData()}>
                 <XAxis dataKey="name" stroke="#000000" />
                 <YAxis stroke="#000000" />
                 <Tooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.1)' }}
                   contentStyle={{ 
                     backgroundColor: 'white',
                     border: '1px solid #e2e8f0',
@@ -135,7 +122,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                   {getDifficultyData().map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={selectedFilter === entry.name ? HOVER_COLORS[entry.name as keyof typeof HOVER_COLORS] : COLORS[entry.name as keyof typeof COLORS]}
+                      fill={entry.name === 'Low' ? '#22C55E' : entry.name === 'Medium' ? '#EAB308' : '#EF4444'}
                       className="transition-colors duration-300 hover:opacity-80 cursor-pointer"
                     />
                   ))}
@@ -144,13 +131,12 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="time" className="h-[300px] mt-4">
+          <TabsContent value="time" className="h-[300px] mt-6">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={getTimeSpentData()}>
                 <XAxis dataKey="date" stroke="#000000" />
                 <YAxis stroke="#000000" />
                 <Tooltip 
-                  cursor={{ stroke: '#94A3B8' }}
                   contentStyle={{ 
                     backgroundColor: 'white',
                     border: '1px solid #e2e8f0',
@@ -177,16 +163,22 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="skills" className="h-[300px] mt-4">
+          <TabsContent value="skills" className="h-[300px] mt-6">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={getSkillsData()}
                 onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
               >
-                <XAxis dataKey="name" stroke="#000000" angle={-45} textAnchor="end" height={60} />
+                <XAxis 
+                  dataKey="name" 
+                  stroke="#000000" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={60}
+                  interval={0}
+                />
                 <YAxis stroke="#000000" />
                 <Tooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.1)' }}
                   contentStyle={{ 
                     backgroundColor: 'white',
                     border: '1px solid #e2e8f0',
@@ -196,18 +188,53 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                 />
                 <Bar 
                   dataKey="value" 
-                  fill="#3B82F6"
-                  className="transition-all duration-300 hover:opacity-80"
+                  radius={[4, 4, 0, 0]}
                 >
                   {getSkillsData().map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`}
-                      fill={selectedFilter === entry.name ? '#2563EB' : '#3B82F6'}
+                      fill={selectedFilter === entry.name ? HOVER_COLORS[index % HOVER_COLORS.length] : COLORS[index % COLORS.length]}
                       className="transition-colors duration-300 cursor-pointer"
                     />
                   ))}
                 </Bar>
               </BarChart>
+            </ResponsiveContainer>
+          </TabsContent>
+
+          <TabsContent value="completion" className="h-[300px] mt-6">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Completed', value: tasks.length },
+                    { name: 'In Progress', value: Math.round(tasks.length * 0.3) },
+                    { name: 'Planned', value: Math.round(tasks.length * 0.2) }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={5}
+                  dataKey="value"
+                >
+                  {[0, 1, 2].map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`}
+                      fill={COLORS[index % COLORS.length]}
+                      className="transition-opacity duration-300 hover:opacity-80"
+                    />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'white',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '8px'
+                  }}
+                />
+              </PieChart>
             </ResponsiveContainer>
           </TabsContent>
         </Tabs>
