@@ -10,7 +10,7 @@ interface WeeklySummaryProps {
 
 const WeeklySummary = ({ totalTasks, topSkill, challengingTask }: WeeklySummaryProps) => {
   return (
-    <Card>
+    <Card className="bg-green-50/50 transition-all duration-200 hover:shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center">
           <BarChart className="mr-2 h-4 w-4" />
@@ -19,9 +19,18 @@ const WeeklySummary = ({ totalTasks, topSkill, challengingTask }: WeeklySummaryP
       </CardHeader>
       <CardContent>
         <div className="space-y-2">
-          <div className="text-sm">Tasks Completed: {totalTasks}</div>
-          <div className="text-sm">Top Skill: {topSkill}</div>
-          <div className="text-sm">Most Challenging: {challengingTask}</div>
+          <div className="text-sm flex justify-between">
+            <span>Tasks Completed:</span>
+            <span className="font-medium">{totalTasks}</span>
+          </div>
+          <div className="text-sm flex justify-between">
+            <span>Top Skill:</span>
+            <span className="font-medium">{topSkill}</span>
+          </div>
+          <div className="text-sm flex justify-between">
+            <span>Most Challenging:</span>
+            <span className="font-medium">{challengingTask}</span>
+          </div>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 interface RecentSkillsProps {
   skills: string[];
@@ -8,7 +9,7 @@ interface RecentSkillsProps {
 
 const RecentSkills = ({ skills }: RecentSkillsProps) => {
   return (
-    <Card>
+    <Card className="bg-purple-50/50 transition-all duration-200 hover:shadow-md">
       <CardHeader>
         <CardTitle className="flex items-center">
           <Star className="mr-2 h-4 w-4" />
@@ -16,9 +17,15 @@ const RecentSkills = ({ skills }: RecentSkillsProps) => {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-2">
+        <div className="flex flex-wrap gap-2">
           {skills.slice(0, 5).map((skill, index) => (
-            <div key={index} className="text-sm">{skill}</div>
+            <Badge
+              key={index}
+              variant="secondary"
+              className="transition-all duration-200 hover:bg-accent"
+            >
+              {skill}
+            </Badge>
           ))}
         </div>
       </CardContent>
