@@ -17,12 +17,12 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // First check the current session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error("Session error:", sessionError);
-          await supabase.auth.signOut(); // Clear any invalid session
+        if (error) {
+          console.error("Session error:", error);
+          // Clear the invalid session
+          await supabase.auth.signOut();
           setIsAuthenticated(false);
           setIsLoading(false);
           return;
@@ -41,15 +41,23 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, !!session);
       
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+      if (event === 'SIGNED_OUT') {
         setIsAuthenticated(false);
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setIsAuthenticated(true);
+        // Validate the session when signed in or token refreshed
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        if (error || !currentSession) {
+          console.error("Session validation error:", error);
+          setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(true);
+        }
       }
       
       setIsLoading(false);
     });
 
+    // Initial auth check
     checkAuth();
 
     return () => {
