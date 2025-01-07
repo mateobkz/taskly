@@ -25,20 +25,67 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#1E293B",
+          DEFAULT: "#1E3A8A",
           foreground: "#FFFFFF",
+          50: '#EEF2FF',
+          100: '#E0E7FF',
+          200: '#C7D2FE',
+          300: '#A5B4FC',
+          400: '#818CF8',
+          500: '#6366F1',
+          600: '#4F46E5',
+          700: '#4338CA',
+          800: '#3730A3',
+          900: '#312E81',
         },
         secondary: {
-          DEFAULT: "#3B82F6",
+          DEFAULT: "#14B8A6",
           foreground: "#FFFFFF",
+          50: '#F0FDFA',
+          100: '#CCFBF1',
+          200: '#99F6E4',
+          300: '#5EEAD4',
+          400: '#2DD4BF',
+          500: '#14B8A6',
+          600: '#0D9488',
+          700: '#0F766E',
+          800: '#115E59',
+          900: '#134E4A',
         },
         accent: {
-          DEFAULT: "#60A5FA",
+          DEFAULT: "#A78BFA",
           foreground: "#FFFFFF",
+          50: '#F5F3FF',
+          100: '#EDE9FE',
+          200: '#DDD6FE',
+          300: '#C4B5FD',
+          400: '#A78BFA',
+          500: '#8B5CF6',
+          600: '#7C3AED',
+          700: '#6D28D9',
+          800: '#5B21B6',
+          900: '#4C1D95',
+        },
+        gold: {
+          DEFAULT: "#FBBF24",
+          50: '#FFFBEB',
+          100: '#FEF3C7',
+          200: '#FDE68A',
+          300: '#FCD34D',
+          400: '#FBBF24',
+          500: '#F59E0B',
+          600: '#D97706',
+          700: '#B45309',
+          800: '#92400E',
+          900: '#78350F',
         },
         muted: {
-          DEFAULT: "#F1F5F9",
+          DEFAULT: "#F8FAFC",
           foreground: "#64748B",
+        },
+        destructive: {
+          DEFAULT: "#EF4444",
+          foreground: "#FFFFFF",
         },
       },
       fontFamily: {
@@ -87,6 +134,33 @@ export default {
           "100%": {
             transform: "scale(1)"
           }
+        },
+        "slide-in": {
+          "0%": {
+            transform: "translateX(-100%)"
+          },
+          "100%": {
+            transform: "translateX(0)"
+          }
+        },
+        "slide-out": {
+          "0%": {
+            transform: "translateX(0)"
+          },
+          "100%": {
+            transform: "translateX(-100%)"
+          }
+        },
+        "gradient-shift": {
+          "0%": {
+            backgroundPosition: "0% 50%"
+          },
+          "50%": {
+            backgroundPosition: "100% 50%"
+          },
+          "100%": {
+            backgroundPosition: "0% 50%"
+          }
         }
       },
       animation: {
@@ -94,6 +168,14 @@ export default {
         "fade-out": "fade-out 0.3s ease-out",
         "pulse": "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "scale": "scale 0.2s ease-out",
+        "slide-in": "slide-in 0.3s ease-out",
+        "slide-out": "slide-out 0.3s ease-out",
+        "gradient-shift": "gradient-shift 3s ease infinite"
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'auth-pattern': "url('/auth-pattern.svg')",
       },
     },
   },
