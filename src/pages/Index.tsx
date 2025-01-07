@@ -3,6 +3,7 @@ import Dashboard from "@/components/Dashboard";
 import TaskForm from "@/components/TaskFormNew";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
+import QuickAddTask from "@/components/task/QuickAddTask";
 
 const Index = () => {
   const { toast } = useToast();
@@ -42,6 +43,8 @@ const Index = () => {
           <TaskForm onTaskAdded={handleTaskAdded} />
         </TabsContent>
       </Tabs>
+      
+      <QuickAddTask onTaskAdded={handleTaskAdded} />
     </div>
   );
 };
