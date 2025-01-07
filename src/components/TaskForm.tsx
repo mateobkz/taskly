@@ -50,6 +50,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
     difficulty: initialData?.difficulty || "",
     key_challenges: initialData?.key_challenges || "",
     key_takeaways: initialData?.key_takeaways || "",
+    duration_minutes: initialData?.duration_minutes || 0,
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, field?: string) => {
@@ -102,6 +103,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
           difficulty: "",
           key_challenges: "",
           key_takeaways: "",
+          duration_minutes: 0,
         });
       }
     } catch (error) {
@@ -150,7 +152,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="date_completed">Date Completed</Label>
               <Input 
@@ -165,16 +167,31 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing }: TaskFormProps) => {
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="duration_minutes">Duration</Label>
+              <Input 
+                id="duration_minutes"
+                name="duration_minutes"
+                type="number"
+                min="0"
+                value={formData.duration_minutes}
+                onChange={handleChange}
+                placeholder="Duration in minutes"
+                className="transition-all duration-200 focus:ring-2 focus:ring-accent"
+                required 
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="difficulty">Difficulty Level</Label>
               <Select 
                 value={formData.difficulty} 
                 onValueChange={(value) => handleChange(value, 'difficulty')}
                 required
               >
-                <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-accent">
+                <SelectTrigger className="transition-all duration-200 focus:ring-2 focus:ring-accent bg-background">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border shadow-lg">
                   <SelectItem value="Low">
                     <Badge className={getDifficultyColor('Low')}>Low</Badge>
                   </SelectItem>

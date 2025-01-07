@@ -114,19 +114,6 @@ const Dashboard = () => {
     };
   };
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty.toLowerCase()) {
-      case 'low':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
-      case 'high':
-        return 'bg-red-100 text-red-800 hover:bg-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    }
-  };
-
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -137,11 +124,11 @@ const Dashboard = () => {
           </Button>
           <Popover>
             <PopoverTrigger asChild>
-              <Button variant="outline" className="transition-all duration-200 hover:bg-accent hover:text-accent-foreground">
+              <Button variant="outline" className="bg-background transition-all duration-200 hover:bg-accent hover:text-accent-foreground">
                 <Filter className="mr-2 h-4 w-4" /> Filters
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80">
+            <PopoverContent className="w-80 bg-background border shadow-lg">
               <div className="space-y-4">
                 <div>
                   <h4 className="font-medium mb-2">Search Tasks</h4>

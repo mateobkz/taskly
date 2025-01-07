@@ -20,15 +20,15 @@ const WeeklySummary = ({ totalTasks, topSkill, challengingTask }: WeeklySummaryP
       <CardContent>
         <div className="space-y-2">
           <div className="text-sm flex justify-between">
-            <span>Tasks Completed:</span>
+            <span className="font-semibold text-gray-600">Tasks Completed:</span>
             <span className="font-medium">{totalTasks}</span>
           </div>
           <div className="text-sm flex justify-between">
-            <span>Top Skill:</span>
+            <span className="font-semibold text-gray-600">Top Skill:</span>
             <span className="font-medium">{topSkill}</span>
           </div>
           <div className="text-sm flex justify-between">
-            <span>Most Challenging:</span>
+            <span className="font-semibold text-gray-600">Most Challenging:</span>
             <span className="font-medium">{challengingTask}</span>
           </div>
         </div>

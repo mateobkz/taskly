@@ -15,6 +15,7 @@ export type Database = {
           date_completed: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
+          duration_minutes: number
           id: number
           key_challenges: string
           key_takeaways: string
@@ -27,6 +28,7 @@ export type Database = {
           date_completed: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
+          duration_minutes?: number
           id?: number
           key_challenges: string
           key_takeaways: string
@@ -39,6 +41,7 @@ export type Database = {
           date_completed?: string
           description?: string
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
+          duration_minutes?: number
           id?: number
           key_challenges?: string
           key_takeaways?: string

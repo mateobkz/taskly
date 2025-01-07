@@ -3,7 +3,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog"
 import { ModalCard } from "@/components/ui/modal-card"
 import { Task } from "@/types/task"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb } from "lucide-react"
+import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb, Clock } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
 interface TaskViewModalProps {
@@ -36,8 +36,17 @@ const getDifficultyColor = (difficulty: string) => {
   }
 };
 
+const formatDuration = (minutes: number) => {
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours > 0) {
+    return `${hours}h ${remainingMinutes}m`;
+  }
+  return `${remainingMinutes}m`;
+};
+
 const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
-  if (!task) return null
+  if (!task) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,9 +62,13 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
                 <Calendar className="h-4 w-4" />
                 {new Date(task.date_completed).toLocaleDateString()}
               </div>
-              <Badge className={getDifficultyColor(task.difficulty)}>
-                {task.difficulty}
-              </Badge>
+              <div className="flex items-center gap-2">
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{formatDuration(task.duration_minutes)}</span>
+                <Badge className={getDifficultyColor(task.difficulty)}>
+                  {task.difficulty}
+                </Badge>
+              </div>
             </div>
 
             <TaskSection 
@@ -97,7 +110,7 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
         </ModalCard>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default TaskViewModal
+export default TaskViewModal;

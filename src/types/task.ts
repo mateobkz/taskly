@@ -7,4 +7,5 @@ export type Task = {
   description: string;
   key_challenges: string;
   key_takeaways: string;
+  duration_minutes: number;
 };

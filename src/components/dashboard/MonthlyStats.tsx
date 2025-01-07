@@ -8,6 +8,19 @@ interface MonthlyStatsProps {
   tasks: Task[];
 }
 
+const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty.toLowerCase()) {
+    case 'low':
+      return '#22C55E';
+    case 'medium':
+      return '#EAB308';
+    case 'high':
+      return '#EF4444';
+    default:
+      return '#8884d8';
+  }
+};
+
 const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
   const difficultyCount = {
     Low: tasks.filter(t => t.difficulty === 'Low').length,
@@ -16,9 +29,9 @@ const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
   };
 
   const chartData = [
-    { name: 'Low', value: difficultyCount.Low, color: '#22C55E' },
-    { name: 'Medium', value: difficultyCount.Medium, color: '#EAB308' },
-    { name: 'High', value: difficultyCount.High, color: '#EF4444' },
+    { name: 'Low', value: difficultyCount.Low, color: getDifficultyColor('low') },
+    { name: 'Medium', value: difficultyCount.Medium, color: getDifficultyColor('medium') },
+    { name: 'High', value: difficultyCount.High, color: getDifficultyColor('high') },
   ];
 
   return (
@@ -36,7 +49,7 @@ const MonthlyStats = ({ tasks }: MonthlyStatsProps) => {
               <XAxis dataKey="name" />
               <YAxis />
               <Tooltip />
-              <Bar dataKey="value" fill="#8884d8">
+              <Bar dataKey="value">
                 {chartData.map((entry, index) => (
                   <Bar
                     key={`cell-${index}`}
