@@ -58,8 +58,11 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Clipboard className="h-8 w-8 text-blue-500" />
-                  <h1 className="text-3xl font-bold text-primary">
+                  <div className="flex items-center gap-2">
+                    <Clipboard className="h-8 w-8 text-blue-500" />
+                    <span className="text-lg font-semibold text-blue-500">Taskly</span>
+                  </div>
+                  <h1 className="text-3xl font-bold text-primary ml-2">
                     Welcome, {getFirstName(userEmail)}! Keep up the great work!
                   </h1>
                 </div>
@@ -70,7 +73,7 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
                 />
               </div>
               <p className="text-muted-foreground">
-                Track your learning journey and celebrate your progress
+                Track your learning journey and celebrate your progress with Taskly
               </p>
             </div>
             <div className="space-y-2">
