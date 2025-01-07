@@ -25,7 +25,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
-    --radius: 0.75rem;
+    --radius: 0.5rem;
   }
 
   * {
@@ -33,106 +33,6 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased;
-  }
-
-  /* Custom Scrollbar */
-  ::-webkit-scrollbar {
-    @apply w-2;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-muted rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full hover:bg-primary/30 transition-colors;
-  }
-
-  /* Custom Animations */
-  .hover-scale {
-    @apply transition-transform duration-200 hover:scale-105;
-  }
-
-  .hover-glow {
-    @apply transition-all duration-200 hover:shadow-lg hover:shadow-primary/20;
-  }
-
-  .gradient-text {
-    @apply bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent;
-  }
-
-  .gradient-border {
-    @apply border-2 border-transparent bg-gradient-to-r from-primary via-secondary to-accent bg-clip-border;
-  }
-
-  /* Card and Input Styles */
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-lg hover:shadow-primary/10 hover:border-primary/20;
-  }
-
-  .input-focus {
-    @apply focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all duration-200;
-  }
-
-  /* Button Styles */
-  .btn-primary {
-    @apply bg-gradient-to-r from-primary to-primary-700 text-white hover:from-primary-600 hover:to-primary-800 transition-all duration-200;
-  }
-
-  .btn-secondary {
-    @apply bg-gradient-to-r from-secondary to-secondary-700 text-white hover:from-secondary-600 hover:to-secondary-800 transition-all duration-200;
-  }
-
-  .btn-accent {
-    @apply bg-gradient-to-r from-accent to-accent-700 text-white hover:from-accent-600 hover:to-accent-800 transition-all duration-200;
-  }
-
-  /* Layout Utilities */
-  .page-container {
-    @apply container mx-auto px-4 py-8 max-w-7xl;
-  }
-
-  .section-container {
-    @apply space-y-6 my-8;
-  }
-
-  /* Typography */
-  .heading-1 {
-    @apply text-4xl font-bold tracking-tight;
-  }
-
-  .heading-2 {
-    @apply text-3xl font-semibold tracking-tight;
-  }
-
-  .heading-3 {
-    @apply text-2xl font-medium tracking-tight;
-  }
-
-  .subtitle {
-    @apply text-lg text-muted-foreground;
-  }
-
-  /* Form Elements */
-  .form-group {
-    @apply space-y-2;
-  }
-
-  .form-label {
-    @apply text-sm font-medium text-foreground;
-  }
-
-  .form-input {
-    @apply w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
-  }
-
-  /* Navigation */
-  .nav-link {
-    @apply px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200;
-  }
-
-  .nav-link-active {
-    @apply text-foreground bg-primary/5 rounded-lg;
+    @apply bg-background text-foreground font-sans;
   }
 }

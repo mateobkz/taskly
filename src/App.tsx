@@ -12,65 +12,23 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error("Session error:", error);
-          // Clear the invalid session
-          await supabase.auth.signOut();
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-
-        setIsAuthenticated(!!session);
-        setIsLoading(false);
-      } catch (error) {
-        console.error("Auth check error:", error);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
     };
 
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, !!session);
-      
-      if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // Validate the session when signed in or token refreshed
-        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
-        if (error || !currentSession) {
-          console.error("Session validation error:", error);
-          setIsAuthenticated(false);
-        } else {
-          setIsAuthenticated(true);
-        }
-      }
-      
-      setIsLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
     });
 
-    // Initial auth check
     checkAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-      </div>
-    );
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
   }
 
   return isAuthenticated ? children : <Navigate to="/auth" replace />;
