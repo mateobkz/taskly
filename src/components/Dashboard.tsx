@@ -12,13 +12,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import TaskForm from "@/components/TaskForm";
-import WeeklySummary from "./dashboard/WeeklySummary";
-import RecentSkills from "./dashboard/RecentSkills";
-import MonthlyStats from "./dashboard/MonthlyStats";
 import TaskList from "./dashboard/TaskList";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
-import { getDifficultyColor } from "@/lib/utils/difficulty";
+import HeroSection from "./dashboard/HeroSection";
+import KeyStats from "./dashboard/KeyStats";
+import InsightsSection from "./dashboard/InsightsSection";
+import ChartSection from "./dashboard/ChartSection";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -86,39 +86,9 @@ const Dashboard = () => {
     }
   };
 
-  const getWeeklySummary = () => {
-    console.log("Calculating weekly summary");
-    if (!tasks.length) return { totalTasks: 0, topSkill: "None", challengingTask: "None" };
-
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-
-    const weeklyTasks = tasks.filter(task => 
-      new Date(task.date_completed) >= oneWeekAgo
-    );
-
-    const skillCount: { [key: string]: number } = {};
-    weeklyTasks.forEach(task => {
-      task.skills_acquired.split(',').forEach(skill => {
-        const trimmedSkill = skill.trim();
-        skillCount[trimmedSkill] = (skillCount[trimmedSkill] || 0) + 1;
-      });
-    });
-
-    const topSkill = Object.entries(skillCount).sort((a, b) => b[1] - a[1])[0]?.[0] || "None";
-    const challengingTask = weeklyTasks.find(task => task.difficulty === "High")?.title || "None";
-
-    return {
-      totalTasks: weeklyTasks.length,
-      topSkill,
-      challengingTask
-    };
-  };
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Welcome, Mateo!</h1>
         <div className="flex gap-2">
           <Button variant="outline" className="transition-all duration-200 hover:bg-accent hover:text-accent-foreground">
             <Calendar className="mr-2 h-4 w-4" /> This Week
@@ -148,7 +118,7 @@ const Dashboard = () => {
                         key={diff}
                         className={`cursor-pointer transition-all duration-200 ${
                           selectedDifficulty === diff 
-                            ? getDifficultyColor(diff)
+                            ? 'bg-accent text-accent-foreground'
                             : 'bg-muted hover:bg-accent/20'
                         }`}
                         onClick={() => setSelectedDifficulty(
@@ -166,12 +136,13 @@ const Dashboard = () => {
         </div>
       </div>
 
+      <HeroSection tasks={tasks} />
+      
+      <KeyStats tasks={tasks} />
+      
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <WeeklySummary {...getWeeklySummary()} />
-        <RecentSkills skills={Array.from(new Set(tasks.flatMap(task => 
-          task.skills_acquired.split(',').map(skill => skill.trim())
-        )))} />
-        <MonthlyStats tasks={tasks} />
+        <InsightsSection tasks={tasks} />
+        <ChartSection tasks={tasks} />
       </div>
 
       <TaskList 
