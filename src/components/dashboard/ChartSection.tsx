@@ -92,7 +92,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
     <Card className="col-span-2 transition-all duration-300 hover:shadow-lg animate-fade-in bg-white/50 backdrop-blur-sm border-2">
       <CardHeader>
         <CardTitle className="text-2xl font-bold">Analytics</CardTitle>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <Tabs defaultValue="difficulty" className="w-full">
           <TabsList className="grid w-full grid-cols-3 bg-muted/50">
             <TabsTrigger 
               value="difficulty" 
@@ -113,11 +113,8 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
               Top Skills
             </TabsTrigger>
           </TabsList>
-        </Tabs>
-      </CardHeader>
-      <CardContent className="pt-4">
-        <div className="h-[300px] w-full">
-          <TabsContent value="difficulty" className="h-full mt-0">
+
+          <TabsContent value="difficulty" className="h-[300px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={getDifficultyData()} 
@@ -147,7 +144,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="time" className="h-full mt-0">
+          <TabsContent value="time" className="h-[300px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={getTimeSpentData()}>
                 <XAxis dataKey="date" stroke="#000000" />
@@ -169,8 +166,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                   dot={{ 
                     fill: '#3B82F6',
                     r: 4,
-                    strokeWidth: 2,
-                    className: "transition-all duration-300 hover:r-6"
+                    strokeWidth: 2
                   }}
                   activeDot={{ 
                     r: 6,
@@ -181,13 +177,13 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </ResponsiveContainer>
           </TabsContent>
 
-          <TabsContent value="skills" className="h-full mt-0">
+          <TabsContent value="skills" className="h-[300px] mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
                 data={getSkillsData()}
                 onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
               >
-                <XAxis dataKey="name" stroke="#000000" />
+                <XAxis dataKey="name" stroke="#000000" angle={-45} textAnchor="end" height={60} />
                 <YAxis stroke="#000000" />
                 <Tooltip 
                   cursor={{ fill: 'rgba(0,0,0,0.1)' }}
@@ -214,8 +210,8 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
               </BarChart>
             </ResponsiveContainer>
           </TabsContent>
-        </div>
-      </CardContent>
+        </Tabs>
+      </CardHeader>
     </Card>
   );
 };
