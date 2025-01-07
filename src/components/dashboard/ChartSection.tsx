@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Cell, PieChart, Pie } from "recharts";
 import { Task } from "@/types/task";
 import { useToast } from "@/components/ui/use-toast";
-import { motion } from "framer-motion";
+import DifficultyChart from "./charts/DifficultyChart";
+import TimeSpentChart from "./charts/TimeSpentChart";
+import SkillsChart from "./charts/SkillsChart";
+import ProgressChart from "./charts/ProgressChart";
 
 interface ChartSectionProps {
   tasks: Task[];
@@ -13,68 +15,6 @@ interface ChartSectionProps {
 const ChartSection = ({ tasks }: ChartSectionProps) => {
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const getDifficultyData = () => {
-    const difficultyCount = {
-      Low: tasks.filter(t => t.difficulty === 'Low').length,
-      Medium: tasks.filter(t => t.difficulty === 'Medium').length,
-      High: tasks.filter(t => t.difficulty === 'High').length,
-    };
-
-    return [
-      { name: 'Low', value: difficultyCount.Low },
-      { name: 'Medium', value: difficultyCount.Medium },
-      { name: 'High', value: difficultyCount.High },
-    ];
-  };
-
-  const getTimeSpentData = () => {
-    const last7Days = [...Array(7)].map((_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      return date.toISOString().split('T')[0];
-    }).reverse();
-
-    return last7Days.map(date => {
-      const dayTasks = tasks.filter(task => task.date_completed === date);
-      const totalHours = dayTasks.reduce((acc, task) => acc + (task.duration_minutes / 60), 0);
-      return {
-        date: new Date(date).toLocaleDateString('en-US', { weekday: 'short' }),
-        hours: Number(totalHours.toFixed(1))
-      };
-    });
-  };
-
-  const getSkillsData = () => {
-    const skillCount: { [key: string]: number } = {};
-    tasks.forEach(task => {
-      task.skills_acquired.split(',').forEach(skill => {
-        const trimmedSkill = skill.trim();
-        skillCount[trimmedSkill] = (skillCount[trimmedSkill] || 0) + 1;
-      });
-    });
-
-    return Object.entries(skillCount)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-  };
-
-  const getProgressData = () => {
-    const totalTasks = tasks.length;
-    const completedTasks = tasks.filter(task => task.date_completed).length;
-    const inProgressTasks = Math.round(totalTasks * 0.3); // This is a placeholder calculation
-    const plannedTasks = Math.round(totalTasks * 0.2); // This is a placeholder calculation
-
-    return [
-      { name: 'Completed', value: completedTasks, color: '#3B82F6' },
-      { name: 'In Progress', value: inProgressTasks, color: '#60A5FA' },
-      { name: 'Planned', value: plannedTasks, color: '#93C5FD' }
-    ];
-  };
-
-  const COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE'];
-  const HOVER_COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
 
   const handleChartClick = (data: any) => {
     if (!data || !data.name) return;
@@ -119,133 +59,23 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
           </TabsList>
 
           <TabsContent value="difficulty" className="h-[300px] mt-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={getDifficultyData()}>
-                <XAxis dataKey="name" stroke="#000000" />
-                <YAxis stroke="#000000" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    padding: '8px'
-                  }}
-                />
-                <Bar dataKey="value" className="transition-all duration-300">
-                  {getDifficultyData().map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={entry.name === 'Low' ? '#22C55E' : entry.name === 'Medium' ? '#EAB308' : '#EF4444'}
-                      className="transition-colors duration-300 hover:opacity-80 cursor-pointer"
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <DifficultyChart tasks={tasks} />
           </TabsContent>
 
           <TabsContent value="time" className="h-[300px] mt-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={getTimeSpentData()}>
-                <XAxis dataKey="date" stroke="#000000" />
-                <YAxis stroke="#000000" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    padding: '8px'
-                  }}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="hours" 
-                  stroke="#3B82F6" 
-                  strokeWidth={2}
-                  dot={{ 
-                    fill: '#3B82F6',
-                    r: 4,
-                    strokeWidth: 2
-                  }}
-                  activeDot={{ 
-                    r: 6,
-                    className: "animate-pulse"
-                  }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <TimeSpentChart tasks={tasks} />
           </TabsContent>
 
           <TabsContent value="skills" className="h-[300px] mt-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={getSkillsData()}
-                onClick={(data) => handleChartClick(data.activePayload?.[0]?.payload)}
-              >
-                <XAxis 
-                  dataKey="name" 
-                  stroke="#000000" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={60}
-                  interval={0}
-                />
-                <YAxis stroke="#000000" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    padding: '8px'
-                  }}
-                />
-                <Bar 
-                  dataKey="value" 
-                  radius={[4, 4, 0, 0]}
-                >
-                  {getSkillsData().map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`}
-                      fill={selectedFilter === entry.name ? HOVER_COLORS[index % HOVER_COLORS.length] : COLORS[index % COLORS.length]}
-                      className="transition-colors duration-300 cursor-pointer"
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            <SkillsChart 
+              tasks={tasks}
+              selectedFilter={selectedFilter}
+              onChartClick={handleChartClick}
+            />
           </TabsContent>
 
           <TabsContent value="completion" className="h-[300px] mt-6">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={getProgressData()}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {getProgressData().map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`}
-                      fill={entry.color}
-                      className="transition-opacity duration-300 hover:opacity-80"
-                    />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'white',
-                    border: '1px solid #e2e8f0',
-                    borderRadius: '8px',
-                    padding: '8px'
-                  }}
-                  formatter={(value: any) => [`${value} Tasks`, '']}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            <ProgressChart tasks={tasks} />
           </TabsContent>
         </Tabs>
       </CardHeader>
