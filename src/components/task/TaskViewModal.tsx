@@ -2,9 +2,8 @@ import React from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Task } from "@/types/task"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb, Clock, X } from "lucide-react"
+import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb, Clock } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
-import { Button } from "@/components/ui/button"
 
 interface TaskViewModalProps {
   task: Task | null
@@ -57,15 +56,6 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
             Detailed information about this task
           </DialogDescription>
         </DialogHeader>
-        
-        <Button
-          variant="ghost"
-          size="icon"
-          className="absolute right-4 top-4 rounded-full hover:bg-gray-100"
-          onClick={() => onOpenChange(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
 
         <div className="space-y-6 mt-6">
           <div className="flex items-center justify-between">
