@@ -99,10 +99,10 @@ const Dashboard = () => {
                 <Filter className="mr-2 h-4 w-4" /> Filters
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-background border shadow-lg">
+            <PopoverContent className="w-80 bg-white border shadow-lg">
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Search Tasks</h4>
+                  <h4 className="font-medium mb-2 text-black">Search Tasks</h4>
                   <Input 
                     placeholder="Search by title or skill..."
                     value={searchQuery}
@@ -111,15 +111,15 @@ const Dashboard = () => {
                   />
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Filter by Difficulty</h4>
+                  <h4 className="font-medium mb-2 text-black">Filter by Difficulty</h4>
                   <div className="flex gap-2">
                     {["Low", "Medium", "High"].map((diff) => (
                       <Badge
                         key={diff}
                         className={`cursor-pointer transition-all duration-200 ${
                           selectedDifficulty === diff 
-                            ? 'bg-accent text-accent-foreground'
-                            : 'bg-muted hover:bg-accent/20'
+                            ? 'bg-accent text-black font-medium'
+                            : 'bg-muted text-black hover:bg-accent/20'
                         }`}
                         onClick={() => setSelectedDifficulty(
                           diff === selectedDifficulty ? null : diff as 'Low' | 'Medium' | 'High'
@@ -155,7 +155,7 @@ const Dashboard = () => {
       />
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Task</DialogTitle>
           </DialogHeader>

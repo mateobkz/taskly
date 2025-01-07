@@ -60,6 +60,19 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
       .slice(0, 5);
   };
 
+  const getProgressData = () => {
+    const totalTasks = tasks.length;
+    const completedTasks = tasks.filter(task => task.date_completed).length;
+    const inProgressTasks = Math.round(totalTasks * 0.3); // This is a placeholder calculation
+    const plannedTasks = Math.round(totalTasks * 0.2); // This is a placeholder calculation
+
+    return [
+      { name: 'Completed', value: completedTasks, color: '#3B82F6' },
+      { name: 'In Progress', value: inProgressTasks, color: '#60A5FA' },
+      { name: 'Planned', value: plannedTasks, color: '#93C5FD' }
+    ];
+  };
+
   const COLORS = ['#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE', '#DBEAFE'];
   const HOVER_COLORS = ['#2563EB', '#3B82F6', '#60A5FA', '#93C5FD', '#BFDBFE'];
 
@@ -206,11 +219,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={[
-                    { name: 'Completed', value: tasks.length },
-                    { name: 'In Progress', value: Math.round(tasks.length * 0.3) },
-                    { name: 'Planned', value: Math.round(tasks.length * 0.2) }
-                  ]}
+                  data={getProgressData()}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -218,10 +227,10 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                   paddingAngle={5}
                   dataKey="value"
                 >
-                  {[0, 1, 2].map((entry, index) => (
+                  {getProgressData().map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+                      fill={entry.color}
                       className="transition-opacity duration-300 hover:opacity-80"
                     />
                   ))}
@@ -233,6 +242,7 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
                     borderRadius: '8px',
                     padding: '8px'
                   }}
+                  formatter={(value: any) => [`${value} Tasks`, '']}
                 />
               </PieChart>
             </ResponsiveContainer>
