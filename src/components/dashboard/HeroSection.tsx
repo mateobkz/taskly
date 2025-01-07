@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Trophy } from "lucide-react";
+import { Trophy, Clipboard } from "lucide-react";
 import { Task } from "@/types/task";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -57,9 +57,12 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
           <div className="space-y-4 flex-1">
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h1 className="text-3xl font-bold text-primary">
-                  Welcome, {getFirstName(userEmail)}! Keep up the great work!
-                </h1>
+                <div className="flex items-center gap-3">
+                  <Clipboard className="h-8 w-8 text-blue-500" />
+                  <h1 className="text-3xl font-bold text-primary">
+                    Welcome, {getFirstName(userEmail)}! Keep up the great work!
+                  </h1>
+                </div>
                 <img 
                   src={getCompanyLogo(userEmail)} 
                   alt="Company Logo" 
