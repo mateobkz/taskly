@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar, Filter } from "lucide-react";
+import { Calendar, Filter, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -11,7 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TaskForm from "@/components/TaskForm";
+import TaskForm from "@/components/TaskFormNew";
 import TaskList from "./dashboard/TaskList";
 import { Task } from "@/types/task";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import HeroSection from "./dashboard/HeroSection";
 import KeyStats from "./dashboard/KeyStats";
 import InsightsSection from "./dashboard/InsightsSection";
 import ChartSection from "./dashboard/ChartSection";
+import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -27,13 +28,31 @@ const Dashboard = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    } else {
+      navigate("/auth");
+    }
+  };
 
   const fetchTasks = async () => {
     console.log("Fetching tasks");
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       let query = supabase
         .from('tasks')
         .select('*')
+        .eq('user_id', user.id)
         .order('date_completed', { ascending: false });
 
       if (searchQuery) {
@@ -134,6 +153,13 @@ const Dashboard = () => {
             </PopoverContent>
           </Popover>
         </div>
+        <Button
+          variant="outline"
+          onClick={handleLogout}
+          className="transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+        >
+          <LogOut className="mr-2 h-4 w-4" /> Sign Out
+        </Button>
       </div>
 
       <HeroSection tasks={tasks} />

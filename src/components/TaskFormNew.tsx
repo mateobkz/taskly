@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,21 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
     key_challenges: initialData?.key_challenges || "",
     key_takeaways: initialData?.key_takeaways || "",
     duration_minutes: initialData?.duration_minutes || 0,
+    user_id: initialData?.user_id || null,
   });
+
+  useEffect(() => {
+    const setUserId = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setFormData(prev => ({ ...prev, user_id: user.id }));
+      }
+    };
+    
+    if (!isEditing) {
+      setUserId();
+    }
+  }, [isEditing]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | string, field?: string) => {
     if (typeof e === 'string' && field) {
@@ -37,6 +51,8 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Submitting form data:", formData);
+    
     try {
       if (isEditing && initialData?.id) {
         const { error } = await supabase
@@ -75,6 +91,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
           key_challenges: "",
           key_takeaways: "",
           duration_minutes: 0,
+          user_id: formData.user_id,
         });
       }
     } catch (error) {
