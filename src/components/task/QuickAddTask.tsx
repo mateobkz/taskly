@@ -16,10 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus } from "lucide-react"
+import { Plus, Wand2 } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/integrations/supabase/types"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface QuickAddTaskProps {
   onTaskAdded: () => void;
@@ -31,6 +33,8 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const { toast } = useToast()
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [nlpInput, setNlpInput] = useState("")
+  const [processingNLP, setProcessingNLP] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     difficulty: "" as DifficultyLevel,
@@ -43,6 +47,61 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     key_takeaways: "Added via quick entry",
     duration_minutes: 30,
   })
+
+  const handleNLPProcess = async () => {
+    if (!nlpInput.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a task description",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setProcessingNLP(true)
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-task`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ taskDescription: nlpInput }),
+        }
+      )
+
+      const { parsedTask, error } = await response.json()
+      
+      if (error) throw new Error(error)
+      if (!parsedTask) throw new Error("Failed to parse task details")
+
+      setFormData(prev => ({
+        ...prev,
+        title: parsedTask.title || prev.title,
+        date_started: parsedTask.date_started || prev.date_started,
+        date_ended: parsedTask.date_ended || prev.date_ended,
+        date_completed: parsedTask.date_ended || prev.date_completed,
+        difficulty: (parsedTask.difficulty as DifficultyLevel) || prev.difficulty,
+        skills_acquired: parsedTask.skills_acquired || prev.skills_acquired,
+      }))
+
+      toast({
+        title: "Success",
+        description: "Task details extracted successfully",
+      })
+    } catch (error) {
+      console.error('Error processing NLP:', error)
+      toast({
+        title: "Error",
+        description: "Failed to process task description. Please try manual entry.",
+        variant: "destructive",
+      })
+    } finally {
+      setProcessingNLP(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,6 +127,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
         difficulty: "" as DifficultyLevel,
         skills_acquired: "",
       })
+      setNlpInput("")
     } catch (error) {
       console.error("Error adding task:", error)
       toast({
@@ -95,6 +155,34 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
           <DialogTitle>Quick Add Task</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label>Natural Language Input</Label>
+            <div className="flex gap-2">
+              <Textarea
+                value={nlpInput}
+                onChange={(e) => setNlpInput(e.target.value)}
+                placeholder="Describe your task naturally, e.g.: Complete the marketing report by Jan 20, 2025, difficulty medium, skills: Excel, analysis"
+                className="min-h-[80px]"
+              />
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={handleNLPProcess}
+              disabled={processingNLP}
+            >
+              <Wand2 className="w-4 h-4 mr-2" />
+              {processingNLP ? "Processing..." : "Extract Details"}
+            </Button>
+          </div>
+
+          <Alert>
+            <AlertDescription>
+              Review and adjust the extracted details below if needed
+            </AlertDescription>
+          </Alert>
+          
           <div className="space-y-2">
             <Label htmlFor="title">Task Title</Label>
             <Input
@@ -135,20 +223,35 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
             />
           </div>
           
-          <div className="space-y-2">
-            <Label htmlFor="date">Date</Label>
-            <Input
-              id="date"
-              type="date"
-              value={formData.date_started}
-              onChange={(e) => setFormData({ 
-                ...formData, 
-                date_started: e.target.value, 
-                date_ended: e.target.value,
-                date_completed: e.target.value
-              })}
-              required
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="start_date">Start Date</Label>
+              <Input
+                id="start_date"
+                type="date"
+                value={formData.date_started}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  date_started: e.target.value,
+                })}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="end_date">End Date</Label>
+              <Input
+                id="end_date"
+                type="date"
+                value={formData.date_ended}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  date_ended: e.target.value,
+                  date_completed: e.target.value,
+                })}
+                required
+              />
+            </div>
           </div>
           
           <div className="flex justify-end gap-2">
@@ -162,7 +265,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
         </form>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}
 
-export default QuickAddTask;
+export default QuickAddTask
