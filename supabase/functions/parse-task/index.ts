@@ -51,6 +51,12 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error('OpenAI API error:', errorData);
+      throw new Error('Failed to process task description');
+    }
+
     const data = await response.json();
     console.log('OpenAI response:', data);
 
