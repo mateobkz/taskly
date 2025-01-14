@@ -7,6 +7,7 @@ import DifficultyChart from "./charts/DifficultyChart";
 import TimeSpentChart from "./charts/TimeSpentChart";
 import SkillsChart from "./charts/SkillsChart";
 import ProgressChart from "./charts/ProgressChart";
+import { Info } from "lucide-react";
 
 interface ChartSectionProps {
   tasks: Task[];
@@ -29,7 +30,13 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
   return (
     <Card className="col-span-2 transition-all duration-300 hover:shadow-lg animate-fade-in bg-white/50 backdrop-blur-sm border-2">
       <CardHeader>
-        <CardTitle className="text-2xl font-bold text-gray-800">Analytics Dashboard</CardTitle>
+        <div className="flex items-center justify-between mb-4">
+          <CardTitle className="text-2xl font-bold text-gray-800">Analytics Dashboard</CardTitle>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Info className="h-4 w-4" />
+            <span>Click on chart elements to filter tasks</span>
+          </div>
+        </div>
         <Tabs defaultValue="difficulty" className="w-full">
           <TabsList className="grid w-full grid-cols-4 bg-muted/50">
             <TabsTrigger 
@@ -58,25 +65,27 @@ const ChartSection = ({ tasks }: ChartSectionProps) => {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="difficulty" className="h-[300px] mt-6">
-            <DifficultyChart tasks={tasks} />
-          </TabsContent>
+          <div className="mt-6 p-4 bg-white rounded-lg shadow-sm">
+            <TabsContent value="difficulty" className="h-[300px]">
+              <DifficultyChart tasks={tasks} />
+            </TabsContent>
 
-          <TabsContent value="time" className="h-[300px] mt-6">
-            <TimeSpentChart tasks={tasks} />
-          </TabsContent>
+            <TabsContent value="time" className="h-[300px]">
+              <TimeSpentChart tasks={tasks} />
+            </TabsContent>
 
-          <TabsContent value="skills" className="h-[300px] mt-6">
-            <SkillsChart 
-              tasks={tasks}
-              selectedFilter={selectedFilter}
-              onChartClick={handleChartClick}
-            />
-          </TabsContent>
+            <TabsContent value="skills" className="h-[300px]">
+              <SkillsChart 
+                tasks={tasks}
+                selectedFilter={selectedFilter}
+                onChartClick={handleChartClick}
+              />
+            </TabsContent>
 
-          <TabsContent value="completion" className="h-[300px] mt-6">
-            <ProgressChart tasks={tasks} />
-          </TabsContent>
+            <TabsContent value="completion" className="h-[300px]">
+              <ProgressChart tasks={tasks} />
+            </TabsContent>
+          </div>
         </Tabs>
       </CardHeader>
     </Card>

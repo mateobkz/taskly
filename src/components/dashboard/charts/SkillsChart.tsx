@@ -27,11 +27,24 @@ const SkillsChart = ({ tasks, selectedFilter, onChartClick }: SkillsChartProps) 
       .slice(0, 5);
   };
 
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-medium text-gray-900">{label}</p>
+          <p className="text-blue-600">{`${payload[0].value} Tasks`}</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart 
         data={getSkillsData()}
         onClick={(data) => onChartClick(data.activePayload?.[0]?.payload)}
+        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
       >
         <XAxis 
           dataKey="name" 
@@ -40,25 +53,23 @@ const SkillsChart = ({ tasks, selectedFilter, onChartClick }: SkillsChartProps) 
           textAnchor="end" 
           height={60}
           interval={0}
+          tick={{ fontSize: 12 }}
         />
-        <YAxis stroke="#000000" />
-        <Tooltip 
-          contentStyle={{ 
-            backgroundColor: 'white',
-            border: '1px solid #e2e8f0',
-            borderRadius: '8px',
-            padding: '8px'
-          }}
+        <YAxis 
+          stroke="#000000"
+          tick={{ fontSize: 12 }}
         />
+        <Tooltip content={<CustomTooltip />} />
         <Bar 
           dataKey="value" 
           radius={[4, 4, 0, 0]}
+          className="transition-all duration-300"
         >
           {getSkillsData().map((entry, index) => (
             <Cell 
               key={`cell-${index}`}
               fill={selectedFilter === entry.name ? HOVER_COLORS[index % HOVER_COLORS.length] : COLORS[index % COLORS.length]}
-              className="transition-colors duration-300 cursor-pointer"
+              className="transition-colors duration-300 cursor-pointer hover:opacity-80"
             />
           ))}
         </Bar>

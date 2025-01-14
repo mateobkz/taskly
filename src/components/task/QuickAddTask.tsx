@@ -36,7 +36,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     difficulty: "" as DifficultyLevel,
     date_started: new Date().toISOString().split('T')[0],
     date_ended: new Date().toISOString().split('T')[0],
-    date_completed: new Date().toISOString().split('T')[0], // Keep for backward compatibility
+    date_completed: new Date().toISOString().split('T')[0],
     description: "Quick task entry",
     skills_acquired: "",
     key_challenges: "Added via quick entry",
@@ -84,13 +84,13 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         <Button
-          className="fixed bottom-8 right-8 rounded-full w-14 h-14 shadow-lg bg-blue-600 hover:bg-blue-700 text-white"
+          className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg bg-blue-600 hover:bg-blue-700 text-white animate-fade-in"
           size="icon"
         >
           <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>
-      <DialogContent className="bg-white/95 backdrop-blur-sm">
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Quick Add Task</DialogTitle>
         </DialogHeader>
@@ -145,7 +145,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
                 ...formData, 
                 date_started: e.target.value, 
                 date_ended: e.target.value,
-                date_completed: e.target.value // Update date_completed as well
+                date_completed: e.target.value
               })}
               required
             />
@@ -162,7 +162,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
-export default QuickAddTask
+export default QuickAddTask;

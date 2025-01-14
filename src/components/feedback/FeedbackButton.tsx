@@ -76,13 +76,13 @@ const FeedbackButton = () => {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 right-6 rounded-full w-12 h-12 p-0 bg-primary hover:bg-primary/90 shadow-lg"
+        className="fixed bottom-6 left-6 rounded-full w-12 h-12 p-0 bg-primary hover:bg-primary/90 shadow-lg animate-fade-in"
       >
         <MessageSquare className="h-5 w-5" />
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Send Feedback</DialogTitle>
           </DialogHeader>

@@ -7,6 +7,12 @@ interface ProgressChartProps {
 }
 
 const ProgressChart = ({ tasks }: ProgressChartProps) => {
+  const COLORS = {
+    Completed: '#3B82F6',
+    'In Progress': '#60A5FA',
+    Planned: '#93C5FD'
+  };
+
   const getProgressData = () => {
     const totalTasks = tasks.length;
     const completedTasks = tasks.filter(task => task.date_completed).length;
@@ -14,10 +20,22 @@ const ProgressChart = ({ tasks }: ProgressChartProps) => {
     const plannedTasks = Math.round(totalTasks * 0.2);
 
     return [
-      { name: 'Completed', value: completedTasks, color: '#3B82F6' },
-      { name: 'In Progress', value: inProgressTasks, color: '#60A5FA' },
-      { name: 'Planned', value: plannedTasks, color: '#93C5FD' }
+      { name: 'Completed', value: completedTasks, color: COLORS.Completed },
+      { name: 'In Progress', value: inProgressTasks, color: COLORS['In Progress'] },
+      { name: 'Planned', value: plannedTasks, color: COLORS.Planned }
     ];
+  };
+
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 border rounded-lg shadow-lg">
+          <p className="font-medium text-gray-900">{payload[0].name}</p>
+          <p className="text-blue-600">{`${payload[0].value} Tasks`}</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -35,27 +53,23 @@ const ProgressChart = ({ tasks }: ProgressChartProps) => {
             outerRadius={80}
             paddingAngle={5}
             dataKey="value"
+            className="transition-all duration-300"
           >
             {getProgressData().map((entry, index) => (
               <Cell 
                 key={`cell-${index}`}
                 fill={entry.color}
-                className="transition-opacity duration-300 hover:opacity-80"
+                className="transition-opacity duration-300 hover:opacity-80 cursor-pointer"
               />
             ))}
           </Pie>
-          <Tooltip 
-            contentStyle={{ 
-              backgroundColor: 'white',
-              border: '1px solid #e2e8f0',
-              borderRadius: '8px',
-              padding: '8px'
-            }}
-            formatter={(value: any) => [`${value} Tasks`, '']}
-          />
+          <Tooltip content={<CustomTooltip />} />
           <Legend 
             verticalAlign="bottom" 
             height={36}
+            formatter={(value: string) => (
+              <span className="text-sm text-gray-700">{value}</span>
+            )}
           />
         </PieChart>
       </ResponsiveContainer>
