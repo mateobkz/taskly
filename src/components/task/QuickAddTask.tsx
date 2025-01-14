@@ -34,7 +34,8 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const [formData, setFormData] = useState({
     title: "",
     difficulty: "" as DifficultyLevel,
-    date_completed: new Date().toISOString().split('T')[0],
+    date_started: new Date().toISOString().split('T')[0],
+    date_ended: new Date().toISOString().split('T')[0],
     description: "Quick task entry",
     skills_acquired: "",
     key_challenges: "Added via quick entry",
@@ -138,8 +139,8 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
             <Input
               id="date"
               type="date"
-              value={formData.date_completed}
-              onChange={(e) => setFormData({ ...formData, date_completed: e.target.value })}
+              value={formData.date_started}
+              onChange={(e) => setFormData({ ...formData, date_started: e.target.value, date_ended: e.target.value })}
               required
             />
           </div>
