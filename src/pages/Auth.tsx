@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
+import { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -16,10 +17,33 @@ const Auth = () => {
       if (event === "SIGNED_IN" && session) {
         navigate("/");
       }
+      // Clear error message when user signs out
+      if (event === "SIGNED_OUT") {
+        setErrorMessage("");
+      }
+      // Handle authentication errors
+      if (event === "USER_UPDATED") {
+        supabase.auth.getSession().then(({ error }) => {
+          if (error) {
+            setErrorMessage(getErrorMessage(error));
+          }
+        });
+      }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  const getErrorMessage = (error: AuthError) => {
+    switch (error.message) {
+      case "Invalid login credentials":
+        return "Invalid email or password. Please check your credentials and try again.";
+      case "Email not confirmed":
+        return "Please verify your email address before signing in.";
+      default:
+        return error.message;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
