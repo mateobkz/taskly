@@ -36,6 +36,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     difficulty: "" as DifficultyLevel,
     date_started: new Date().toISOString().split('T')[0],
     date_ended: new Date().toISOString().split('T')[0],
+    date_completed: new Date().toISOString().split('T')[0], // Keep for backward compatibility
     description: "Quick task entry",
     skills_acquired: "",
     key_challenges: "Added via quick entry",
@@ -135,12 +136,17 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="date">Date Completed</Label>
+            <Label htmlFor="date">Date</Label>
             <Input
               id="date"
               type="date"
               value={formData.date_started}
-              onChange={(e) => setFormData({ ...formData, date_started: e.target.value, date_ended: e.target.value })}
+              onChange={(e) => setFormData({ 
+                ...formData, 
+                date_started: e.target.value, 
+                date_ended: e.target.value,
+                date_completed: e.target.value // Update date_completed as well
+              })}
               required
             />
           </div>
