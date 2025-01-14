@@ -6,24 +6,31 @@ const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
+  console.log('Received request:', req.method);
+
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 204
+    });
   }
 
   try {
-    const { taskDescription } = await req.json();
-    console.log('Received task description:', taskDescription);
-
     if (!openAIApiKey) {
       console.error('OpenAI API key not found');
-      return new Response(
-        JSON.stringify({ error: 'OpenAI API key not configured' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-      );
+      throw new Error('OpenAI API key not configured');
+    }
+
+    const { taskDescription } = await req.json();
+    console.log('Processing task description:', taskDescription);
+
+    if (!taskDescription) {
+      throw new Error('Task description is required');
     }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -65,18 +72,33 @@ serve(async (req) => {
       parsedTask = JSON.parse(data.choices[0].message.content);
     } catch (e) {
       console.error('Failed to parse OpenAI response:', e);
-      parsedTask = null;
+      throw new Error('Failed to parse task details');
     }
 
     return new Response(
       JSON.stringify({ parsedTask }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
+        status: 200
+      }
     );
   } catch (error) {
     console.error('Error in parse-task function:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      JSON.stringify({ 
+        error: error.message,
+        details: error.stack 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
+        status: 500
+      }
     );
   }
 });
