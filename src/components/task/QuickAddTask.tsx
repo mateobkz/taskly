@@ -60,22 +60,15 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
 
     setProcessingNLP(true)
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-task`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ taskDescription: nlpInput }),
-        }
-      )
+      const { data, error } = await supabase.functions.invoke('parse-task', {
+        body: { taskDescription: nlpInput },
+      });
 
-      const { parsedTask, error } = await response.json()
-      
-      if (error) throw new Error(error)
-      if (!parsedTask) throw new Error("Failed to parse task details")
+      if (error) throw error;
+      if (!data.parsedTask) throw new Error("Failed to parse task details");
+
+      const { parsedTask } = data;
+      console.log('Parsed task:', parsedTask);
 
       setFormData(prev => ({
         ...prev,

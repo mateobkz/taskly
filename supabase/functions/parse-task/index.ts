@@ -9,12 +9,22 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { taskDescription } = await req.json();
+    console.log('Received task description:', taskDescription);
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key not found');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -42,8 +52,9 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('OpenAI response:', data);
+
     let parsedTask;
-    
     try {
       parsedTask = JSON.parse(data.choices[0].message.content);
     } catch (e) {
@@ -51,14 +62,15 @@ serve(async (req) => {
       parsedTask = null;
     }
 
-    return new Response(JSON.stringify({ parsedTask }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ parsedTask }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error('Error in parse-task function:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
   }
 });
