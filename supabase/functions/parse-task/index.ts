@@ -33,7 +33,7 @@ serve(async (req) => {
       throw new Error('Task description is required');
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${openAIApiKey}`,
@@ -50,7 +50,8 @@ serve(async (req) => {
               - date_ended (YYYY-MM-DD)
               - difficulty (string: "Low", "Medium", or "High")
               - skills_acquired (comma-separated string)
-              If any field cannot be determined, return null for that field.`
+              If any field cannot be determined, return null for that field.
+              ONLY return the JSON object, nothing else.`
           },
           { role: 'user', content: taskDescription }
         ],
@@ -58,18 +59,23 @@ serve(async (req) => {
       }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.text();
+    if (!openAIResponse.ok) {
+      const errorData = await openAIResponse.text();
       console.error('OpenAI API error:', errorData);
       throw new Error('Failed to process task description');
     }
 
-    const data = await response.json();
+    const data = await openAIResponse.json();
     console.log('OpenAI response:', data);
+
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error('Invalid response from OpenAI');
+    }
 
     let parsedTask;
     try {
       parsedTask = JSON.parse(data.choices[0].message.content);
+      console.log('Successfully parsed task:', parsedTask);
     } catch (e) {
       console.error('Failed to parse OpenAI response:', e);
       throw new Error('Failed to parse task details');
