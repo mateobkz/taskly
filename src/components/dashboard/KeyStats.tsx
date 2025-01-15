@@ -47,8 +47,8 @@ const KeyStats = ({ tasks }: KeyStatsProps) => {
       icon: CheckSquare,
       label: "Tasks Completed",
       value: stats.tasksCompleted,
-      color: "text-green-500",
-      bgColor: "bg-green-50"
+      color: "text-emerald-500",
+      bgColor: "bg-emerald-50"
     },
     {
       icon: Clock,
@@ -61,20 +61,20 @@ const KeyStats = ({ tasks }: KeyStatsProps) => {
       icon: Award,
       label: "Top Skill",
       value: stats.topSkill,
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-50"
+      color: "text-amber-500",
+      bgColor: "bg-amber-50"
     },
     {
       icon: Flag,
       label: "Most Challenging",
       value: stats.challengingTask,
-      color: "text-red-500",
-      bgColor: "bg-red-50"
+      color: "text-rose-500",
+      bgColor: "bg-rose-50"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
       {statItems.map((item, index) => (
         <Card 
           key={index} 
@@ -83,25 +83,27 @@ const KeyStats = ({ tasks }: KeyStatsProps) => {
             "group hover:scale-[1.02]"
           )}
         >
-          <CardContent className="p-6">
-            <div className="flex flex-col space-y-3">
+          <CardContent className="p-4">
+            <div className="flex items-center space-x-4">
               <div className={cn(
-                "p-2 rounded-lg w-10 h-10 flex items-center justify-center",
+                "p-2 rounded-lg w-8 h-8 flex items-center justify-center",
                 "transition-colors duration-200",
                 item.bgColor,
                 "group-hover:bg-opacity-75"
               )}>
-                <item.icon className={cn("h-5 w-5", item.color)} />
+                <item.icon className={cn("h-4 w-4", item.color)} />
               </div>
-              <div className="space-y-1.5">
-                <p className="text-sm font-medium text-muted-foreground">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm text-muted-foreground mb-0.5">
                   {item.label}
                 </p>
-                <div className="min-h-[2rem] flex items-center">
+                <div className="flex items-center">
                   <p 
                     className={cn(
-                      "text-xl font-bold truncate max-w-full",
-                      typeof item.value === 'string' && item.value.length > 20 ? "text-lg" : "text-xl"
+                      "font-semibold truncate",
+                      typeof item.value === 'string' && item.value.length > 20 
+                        ? "text-sm" 
+                        : "text-lg"
                     )}
                     title={item.value.toString()}
                   >
