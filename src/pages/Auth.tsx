@@ -12,12 +12,14 @@ import { AuthError, AuthApiError } from "@supabase/supabase-js";
 import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
 import { Upload } from "lucide-react";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { useToast } from "@/hooks/use-toast";
 
 type OnboardingStep = 'auth' | 'profile' | 'dashboard';
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { toast } = useToast();
   const [errorMessage, setErrorMessage] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth');
   const [profileData, setProfileData] = useState({
