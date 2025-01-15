@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,53 +19,98 @@ interface QuickAddDialogProps {
 const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
   const [open, setOpen] = React.useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
   const { toast } = useToast();
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const audioChunks: BlobPart[] = [];
+      // Reset audio chunks
+      audioChunksRef.current = [];
+
+      // Request microphone access with specific constraints
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+
+      // Create and configure MediaRecorder
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
 
       recorder.ondataavailable = (event) => {
-        audioChunks.push(event.data);
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
       };
 
       recorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        
-        reader.onload = async () => {
-          if (typeof reader.result === 'string') {
-            const base64Audio = reader.result.split(',')[1];
-            await processAudio(base64Audio);
-          }
-        };
-        
-        reader.readAsDataURL(audioBlob);
+        try {
+          setIsProcessing(true);
+          const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          const reader = new FileReader();
+          
+          reader.onload = async () => {
+            if (typeof reader.result === 'string') {
+              const base64Audio = reader.result.split(',')[1];
+              await processAudio(base64Audio);
+            }
+          };
+          
+          reader.readAsDataURL(audioBlob);
+        } catch (error) {
+          console.error('Error processing audio after recording:', error);
+          toast({
+            title: "Error",
+            description: "Failed to process audio recording. Please try again.",
+            variant: "destructive",
+          });
+        }
       };
 
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        toast({
+          title: "Recording Error",
+          description: "An error occurred while recording. Please try again.",
+          variant: "destructive",
+        });
+        stopRecording();
+      };
+
+      mediaRecorderRef.current = recorder;
       recorder.start();
-      setMediaRecorder(recorder);
       setIsRecording(true);
+
+      toast({
+        title: "Recording Started",
+        description: "Speak clearly to describe your task.",
+      });
+
     } catch (error) {
       console.error('Error accessing microphone:', error);
       toast({
-        title: "Error",
-        description: "Could not access microphone. Please check your permissions.",
+        title: "Microphone Access Error",
+        description: "Could not access microphone. Please check your permissions and try again.",
         variant: "destructive",
       });
+      setIsRecording(false);
     }
   };
 
   const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop();
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
       setIsRecording(false);
-      setIsProcessing(true);
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      
+      // Stop all tracks in the stream
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      mediaRecorderRef.current = null;
     }
   };
 
@@ -83,6 +128,11 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
           detail: { text: data.text } 
         });
         window.dispatchEvent(event);
+        
+        toast({
+          title: "Success",
+          description: "Voice input processed successfully!",
+        });
       }
     } catch (error) {
       console.error('Error processing audio:', error);
@@ -115,7 +165,11 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
             <Button
               variant="outline"
               size="icon"
-              className={`ml-auto ${isRecording ? 'bg-red-100 text-red-600 hover:bg-red-200' : ''}`}
+              className={`ml-auto ${
+                isRecording 
+                  ? 'bg-red-100 text-red-600 hover:bg-red-200 animate-pulse' 
+                  : ''
+              }`}
               onClick={isRecording ? stopRecording : startRecording}
               disabled={isProcessing}
             >
