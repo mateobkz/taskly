@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { extractDomainFromCompany } from '@/utils/companyUtils';
 
 interface Dashboard {
   id: number;
@@ -8,15 +9,21 @@ interface Dashboard {
   user_id: string;
   created_at: string;
   updated_at: string;
+  company_name?: string;
+  position?: string;
+  start_date?: string;
+  end_date?: string;
+  logo_url?: string;
 }
 
 interface DashboardContextType {
   currentDashboard: Dashboard | null;
   dashboards: Dashboard[];
   setCurrentDashboard: (dashboard: Dashboard) => void;
-  createDashboard: (name: string) => Promise<void>;
+  createDashboard: (data: Partial<Dashboard>) => Promise<void>;
   renameDashboard: (id: number, name: string) => Promise<void>;
   deleteDashboard: (id: number) => Promise<void>;
+  updateDashboard: (id: number, data: Partial<Dashboard>) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -30,6 +37,27 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     fetchDashboards();
+
+    // Set up real-time subscription
+    const channel = supabase
+      .channel('dashboard-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'dashboards'
+        },
+        () => {
+          console.log('Dashboard changes detected, refreshing...');
+          fetchDashboards();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchDashboards = async () => {
@@ -63,20 +91,30 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const createDashboard = async (name: string) => {
+  const createDashboard = async (data: Partial<Dashboard>) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      let logoUrl = data.logo_url;
+      if (data.company_name && !logoUrl) {
+        const domain = extractDomainFromCompany(data.company_name);
+        logoUrl = `https://logo.clearbit.com/${domain}`;
+      }
+
+      const { data: newDashboard, error } = await supabase
         .from('dashboards')
-        .insert([{ name, user_id: user.id }])
+        .insert([{ 
+          ...data,
+          user_id: user.id,
+          logo_url: logoUrl
+        }])
         .select()
         .single();
 
       if (error) throw error;
 
-      setDashboards(prev => [...prev, data]);
+      setDashboards(prev => [...prev, newDashboard]);
       toast({
         title: "Success",
         description: "Dashboard created successfully",
@@ -84,7 +122,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       
       // Set as current if it's the first dashboard
       if (dashboards.length === 0) {
-        setCurrentDashboard(data);
+        setCurrentDashboard(newDashboard);
       }
     } catch (error) {
       console.error('Error creating dashboard:', error);
@@ -96,34 +134,45 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const renameDashboard = async (id: number, name: string) => {
+  const updateDashboard = async (id: number, data: Partial<Dashboard>) => {
     try {
-      const { data, error } = await supabase
+      let updateData = { ...data };
+      
+      if (data.company_name && !data.logo_url) {
+        const domain = extractDomainFromCompany(data.company_name);
+        updateData.logo_url = `https://logo.clearbit.com/${domain}`;
+      }
+
+      const { data: updatedDashboard, error } = await supabase
         .from('dashboards')
-        .update({ name })
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
 
       if (error) throw error;
 
-      setDashboards(prev => prev.map(d => d.id === id ? data : d));
+      setDashboards(prev => prev.map(d => d.id === id ? updatedDashboard : d));
       if (currentDashboard?.id === id) {
-        setCurrentDashboard(data);
+        setCurrentDashboard(updatedDashboard);
       }
-      
+
       toast({
         title: "Success",
-        description: "Dashboard renamed successfully",
+        description: "Dashboard updated successfully",
       });
     } catch (error) {
-      console.error('Error renaming dashboard:', error);
+      console.error('Error updating dashboard:', error);
       toast({
         title: "Error",
-        description: "Failed to rename dashboard",
+        description: "Failed to update dashboard",
         variant: "destructive",
       });
     }
+  };
+
+  const renameDashboard = async (id: number, name: string) => {
+    return updateDashboard(id, { name });
   };
 
   const deleteDashboard = async (id: number) => {
@@ -175,6 +224,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         createDashboard,
         renameDashboard,
         deleteDashboard,
+        updateDashboard,
         isLoading,
       }}
     >
