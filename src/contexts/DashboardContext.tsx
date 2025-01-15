@@ -104,11 +104,15 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       const { data: newDashboard, error } = await supabase
         .from('dashboards')
-        .insert([{ 
-          ...data,
+        .insert({
+          name: data.name || 'New Dashboard',
           user_id: user.id,
-          logo_url: logoUrl
-        }])
+          company_name: data.company_name,
+          position: data.position,
+          start_date: data.start_date,
+          end_date: data.end_date,
+          logo_url: logoUrl,
+        })
         .select()
         .single();
 

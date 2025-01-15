@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useDashboard } from '@/contexts/DashboardContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Select,
   SelectContent,
@@ -63,7 +64,11 @@ export default function DashboardSelector() {
     }
 
     await createDashboard({
-      ...formData,
+      name: formData.name,
+      company_name: formData.company_name,
+      position: formData.position,
+      start_date: formData.start_date,
+      end_date: formData.end_date,
       logo_url: logoUrl,
     });
 
