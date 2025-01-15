@@ -153,7 +153,7 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="rounded-md border bg-white"
+                  className="rounded-lg border shadow-sm bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow p-3"
                   components={{
                     DayContent: ({ date }) => getDayContent(date),
                   }}
@@ -162,7 +162,11 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
                 {selectedDate && (
                   <Droppable droppableId={format(selectedDate, 'yyyy-MM-dd')}>
                     {(provided) => (
-                      <Card className="h-fit" ref={provided.innerRef} {...provided.droppableProps}>
+                      <Card 
+                        className="h-fit bg-white/80 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all" 
+                        ref={provided.innerRef} 
+                        {...provided.droppableProps}
+                      >
                         <CardContent className="p-4 space-y-2">
                           <div className="flex items-center justify-between mb-4">
                             <h3 className="font-medium flex items-center gap-2">
