@@ -73,9 +73,14 @@ serve(async (req) => {
           "key_challenges": "Main challenges faced",
           "key_takeaways": "Key learnings and insights"
         }
-      }` :
+      }
+
+      IMPORTANT: Make sure to format the response as a valid JSON object with double quotes around property names and string values.` :
       `You are a task optimization assistant. Based on the clarification provided, generate the final task details.
-      Format the response as a JSON object with the parsedTask structure as shown above.`;
+      Format the response as a JSON object with the parsedTask structure as shown above.
+      IMPORTANT: Make sure to format the response as a valid JSON object with double quotes around property names and string values.`;
+
+    console.log('Sending request to OpenAI with system prompt:', systemPrompt);
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -112,8 +117,25 @@ serve(async (req) => {
       throw new Error('Invalid response format from OpenAI');
     }
 
-    const parsedResponse = JSON.parse(data.choices[0].message.content);
-    console.log('Parsed response:', parsedResponse);
+    let parsedResponse;
+    try {
+      // Try to parse the response content as JSON
+      parsedResponse = JSON.parse(data.choices[0].message.content.trim());
+      console.log('Successfully parsed response:', parsedResponse);
+    } catch (error) {
+      console.error('Error parsing OpenAI response as JSON:', error);
+      console.log('Raw response content:', data.choices[0].message.content);
+      throw new Error('Failed to parse OpenAI response as JSON');
+    }
+
+    // Validate the response structure
+    if (typeof parsedResponse.needsClarification !== 'boolean') {
+      throw new Error('Invalid response format: missing or invalid needsClarification field');
+    }
+
+    if (!parsedResponse.needsClarification && !parsedResponse.parsedTask) {
+      throw new Error('Invalid response format: missing parsedTask when needsClarification is false');
+    }
 
     return new Response(
       JSON.stringify(parsedResponse),
