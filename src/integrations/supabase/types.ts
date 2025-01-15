@@ -57,7 +57,7 @@ export type Database = {
           position: string | null
           preferred_learning_style: string | null
           skills: string[] | null
-          social_links: Json | null
+          social_links: SocialLinks | null
           updated_at: string | null
         }
         Insert: {
@@ -72,7 +72,7 @@ export type Database = {
           position?: string | null
           preferred_learning_style?: string | null
           skills?: string[] | null
-          social_links?: Json | null
+          social_links?: SocialLinks | null
           updated_at?: string | null
         }
         Update: {
@@ -82,12 +82,12 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           full_name?: string | null
-          id?: string
+          id: string
           learning_goals?: string | null
           position?: string | null
           preferred_learning_style?: string | null
           skills?: string[] | null
-          social_links?: Json | null
+          social_links?: SocialLinks | null
           updated_at?: string | null
         }
         Relationships: []
@@ -112,7 +112,7 @@ export type Database = {
           created_at?: string
           date_completed: string
           date_ended?: string
-          date_started?: string
+          date_started: string
           description: string
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
@@ -163,6 +163,12 @@ export type Database = {
     }
   }
 }
+
+export type SocialLinks = {
+  linkedin?: string;
+  github?: string;
+  twitter?: string;
+};
 
 type PublicSchema = Database[Extract<keyof Database, "public">]
 
@@ -227,10 +233,10 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
-      ? U
-      : never
+      Update: infer U
+    }
+    ? U
+    : never
     : never
 
 export type Enums<

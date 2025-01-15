@@ -9,6 +9,7 @@ import { extractDomainFromCompany } from "@/utils/companyUtils";
 import { removeBackground, loadImage } from "@/utils/imageUtils";
 import { Badge } from "@/components/ui/badge";
 import { PlusCircle, Trash2 } from "lucide-react";
+import { SocialLinks } from "@/integrations/supabase/types";
 
 interface ProfileData {
   full_name: string;
@@ -19,11 +20,7 @@ interface ProfileData {
   learning_goals: string;
   preferred_learning_style: string;
   skills: string[];
-  social_links: {
-    linkedin?: string;
-    github?: string;
-    twitter?: string;
-  };
+  social_links: SocialLinks;
 }
 
 const Profile = () => {
