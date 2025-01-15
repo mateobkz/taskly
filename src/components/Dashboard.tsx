@@ -3,14 +3,14 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task";
 import { Goal } from "@/types/goal";
-import HeroSection from "./dashboard/HeroSection";
-import KeyStats from "./dashboard/KeyStats";
-import InsightsSection from "./dashboard/InsightsSection";
-import ChartSection from "./dashboard/ChartSection";
-import GoalProgress from "./dashboard/GoalProgress";
 import { useNavigate } from "react-router-dom";
 import FilterSection from "./dashboard/FilterSection";
-import TaskSection from "./dashboard/TaskSection";
+import GoalProgress from "./dashboard/GoalProgress";
+import TaskList from "./dashboard/TaskList";
+import InsightsSection from "./dashboard/InsightsSection";
+import TimeSpentChart from "./dashboard/charts/TimeSpentChart";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartBar, Clock } from "lucide-react";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -247,27 +247,67 @@ const Dashboard = () => {
         handleLogout={handleLogout}
       />
 
-      <HeroSection tasks={tasks} />
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <KeyStats tasks={tasks} />
-        <GoalProgress goals={goals} />
-      </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <InsightsSection tasks={tasks} />
-        <ChartSection tasks={tasks} />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Left Column */}
+        <div className="space-y-6">
+          <GoalProgress goals={goals} />
+          
+          <Card className="bg-white/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5" />
+                Recent Tasks
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <TaskList 
+                tasks={tasks.slice(0, 3)}
+                onEdit={(task) => {
+                  setSelectedTask(task);
+                  setIsEditDialogOpen(true);
+                }}
+                onDelete={handleDeleteTask}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Right Column */}
+        <div className="space-y-6">
+          <InsightsSection tasks={tasks} />
+          
+          <Card className="bg-white/50 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ChartBar className="h-5 w-5" />
+                Time Analysis
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="h-[300px]">
+              <TimeSpentChart tasks={tasks} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <TaskSection 
-        tasks={tasks}
-        isEditDialogOpen={isEditDialogOpen}
-        setIsEditDialogOpen={setIsEditDialogOpen}
-        selectedTask={selectedTask}
-        setSelectedTask={setSelectedTask}
-        handleDeleteTask={handleDeleteTask}
-        fetchTasks={fetchTasks}
-      />
+      {/* Keep existing dialog for task editing */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Task</DialogTitle>
+          </DialogHeader>
+          {selectedTask && (
+            <TaskForm
+              initialData={selectedTask}
+              isEditing={true}
+              onTaskAdded={() => {
+                setIsEditDialogOpen(false);
+                fetchTasks();
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

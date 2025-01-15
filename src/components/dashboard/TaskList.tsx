@@ -1,69 +1,49 @@
-import React, { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Task } from "@/types/task"
-import TaskCard from "../task/TaskCard"
-import TaskViewModal from "../task/TaskViewModal"
-import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp } from "lucide-react"
+import React from "react";
+import { Task } from "@/types/task";
+import TaskCard from "../task/TaskCard";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { ListPlus } from "lucide-react";
 
 interface TaskListProps {
-  tasks: Task[]
-  onEdit: (task: Task) => void
-  onDelete: (taskId: number) => void
+  tasks: Task[];
+  onEdit: (task: Task) => void;
+  onDelete: (taskId: number) => void;
 }
 
 const TaskList = ({ tasks, onEdit, onDelete }: TaskListProps) => {
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false)
-  const [showAllTasks, setShowAllTasks] = useState(false)
-
-  const displayedTasks = showAllTasks ? tasks : tasks.slice(0, 3)
+  const navigate = useNavigate();
 
   return (
-    <>
-      <Card className="transition-all duration-200 hover:shadow-md bg-white/50 backdrop-blur-sm">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-xl text-gray-800">Recent Tasks</CardTitle>
-          {tasks.length > 3 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowAllTasks(!showAllTasks)}
-              className="flex items-center gap-1 hover:bg-blue-50"
-            >
-              {showAllTasks ? (
-                <>Show Less <ChevronUp className="h-4 w-4" /></>
-              ) : (
-                <>Show More <ChevronDown className="h-4 w-4" /></>
-              )}
-            </Button>
-          )}
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {displayedTasks.map((task) => (
-              <TaskCard
-                key={task.id}
-                task={task}
-                onView={(task) => {
-                  setSelectedTask(task)
-                  setIsViewModalOpen(true)
-                }}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-4">
+      <div className="space-y-3">
+        {tasks.length > 0 ? (
+          tasks.map((task) => (
+            <TaskCard
+              key={task.id}
+              task={task}
+              onView={() => {}}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          ))
+        ) : (
+          <p className="text-center text-gray-500 py-4">No tasks found</p>
+        )}
+      </div>
+      
+      <div className="flex justify-center pt-2">
+        <Button
+          variant="outline"
+          onClick={() => navigate('/tasks')}
+          className="w-full bg-white hover:bg-gray-50"
+        >
+          <ListPlus className="h-4 w-4 mr-2" />
+          View All Tasks
+        </Button>
+      </div>
+    </div>
+  );
+};
 
-      <TaskViewModal
-        task={selectedTask}
-        open={isViewModalOpen}
-        onOpenChange={setIsViewModalOpen}
-      />
-    </>
-  )
-}
-
-export default TaskList
+export default TaskList;
