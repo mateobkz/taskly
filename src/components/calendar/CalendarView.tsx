@@ -118,7 +118,7 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-[1fr,300px] gap-6">
-        <Card className="p-4 bg-white/50 backdrop-blur-sm">
+        <Card className="p-4 bg-white/50 backdrop-blur-sm border-0 shadow-lg">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <CalendarRange className="h-5 w-5 text-blue-500" />
@@ -153,7 +153,40 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
                   mode="single"
                   selected={selectedDate}
                   onSelect={setSelectedDate}
-                  className="rounded-lg border shadow-sm bg-white/80 backdrop-blur-sm hover:shadow-md transition-shadow p-3"
+                  className="rounded-2xl border-0 shadow-md bg-white/90 backdrop-blur-sm hover:shadow-lg transition-shadow p-4"
+                  classNames={{
+                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                    month: "space-y-4",
+                    caption: "flex justify-center pt-1 relative items-center",
+                    caption_label: "text-lg font-medium text-gray-800",
+                    nav: "space-x-1 flex items-center",
+                    nav_button: cn(
+                      "h-9 w-9 bg-transparent p-0 opacity-75 hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
+                    ),
+                    nav_button_previous: "absolute left-1",
+                    nav_button_next: "absolute right-1",
+                    table: "w-full border-collapse space-y-1",
+                    head_row: "flex",
+                    head_cell: "text-gray-500 rounded-md w-10 font-normal text-[0.9rem] mb-2",
+                    row: "flex w-full mt-2",
+                    cell: cn(
+                      "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-blue-50 rounded-full",
+                      "[&:has([aria-selected].day-range-end)]:rounded-r-md",
+                      "[&:has([aria-selected].day-outside)]:bg-gray-50/50",
+                      "[&:has([aria-selected])]:bg-gray-50",
+                      "first:[&:has([aria-selected])]:rounded-l-md",
+                      "last:[&:has([aria-selected])]:rounded-r-md",
+                    ),
+                    day: cn(
+                      "h-10 w-10 p-0 font-normal rounded-full transition-colors hover:bg-blue-50 aria-selected:opacity-100",
+                    ),
+                    day_range_end: "day-range-end",
+                    day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white",
+                    day_today: "bg-gray-100 text-gray-900",
+                    day_outside: "text-gray-400 opacity-50",
+                    day_disabled: "text-gray-400 opacity-50",
+                    day_hidden: "invisible",
+                  }}
                   components={{
                     DayContent: ({ date }) => getDayContent(date),
                   }}
@@ -163,14 +196,14 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
                   <Droppable droppableId={format(selectedDate, 'yyyy-MM-dd')}>
                     {(provided) => (
                       <Card 
-                        className="h-fit bg-white/80 backdrop-blur-sm border shadow-sm hover:shadow-md transition-all" 
+                        className="h-fit bg-white/90 backdrop-blur-sm border-0 shadow-md hover:shadow-lg transition-all rounded-2xl" 
                         ref={provided.innerRef} 
                         {...provided.droppableProps}
                       >
-                        <CardContent className="p-4 space-y-2">
+                        <CardContent className="p-6 space-y-3">
                           <div className="flex items-center justify-between mb-4">
-                            <h3 className="font-medium flex items-center gap-2">
-                              <CalendarCheck className="h-4 w-4 text-blue-500" />
+                            <h3 className="font-medium text-lg flex items-center gap-2">
+                              <CalendarCheck className="h-5 w-5 text-blue-500" />
                               Tasks for {format(selectedDate, 'MMMM d, yyyy')}
                             </h3>
                             <Clock className="h-4 w-4 text-blue-500" />
@@ -235,7 +268,7 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-white/50 backdrop-blur-sm">
+        <Card className="bg-white/90 backdrop-blur-sm border-0 shadow-lg rounded-2xl">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg">Task Distribution</CardTitle>
           </CardHeader>
