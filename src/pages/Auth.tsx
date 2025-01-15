@@ -5,15 +5,47 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import { AuthError } from "@supabase/supabase-js";
 
 const Auth = () => {
   const navigate = useNavigate();
   const [errorMessage, setErrorMessage] = useState("");
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: "",
+    lastName: "",
+    company: "",
+    position: "",
+  });
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: `${profileData.firstName} ${profileData.lastName}`,
+          company_name: profileData.company,
+          position: profileData.position
+        }
+      });
+
+      if (error) throw error;
+      
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+      setErrorMessage("Failed to update profile. Please try again.");
+    }
+  };
 
   useEffect(() => {
-    // Check if user is already authenticated
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -25,17 +57,19 @@ const Auth = () => {
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed in Auth component:", event, !!session);
+      console.log("Auth state changed:", event, !!session);
       
-      if (session) {
-        console.log("Session exists, redirecting to /");
+      if (event === 'SIGNED_IN') {
+        setShowProfileForm(true);
+      } else if (session && !showProfileForm) {
         navigate("/", { replace: true });
       }
-      // Clear error message when user signs out
+      
       if (event === "SIGNED_OUT") {
         setErrorMessage("");
+        setShowProfileForm(false);
       }
-      // Handle authentication errors
+      
       if (event === "USER_UPDATED") {
         supabase.auth.getSession().then(({ error }) => {
           if (error) {
@@ -46,7 +80,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, showProfileForm]);
 
   const getErrorMessage = (error: AuthError) => {
     switch (error.message) {
@@ -58,6 +92,69 @@ const Auth = () => {
         return error.message;
     }
   };
+
+  if (showProfileForm) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Header />
+        <div className="container flex items-center justify-center min-h-screen py-20 px-4">
+          <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl font-bold text-primary">
+                Complete Your Profile
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleProfileSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">First Name</label>
+                    <Input
+                      required
+                      value={profileData.firstName}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Last Name</label>
+                    <Input
+                      required
+                      value={profileData.lastName}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company</label>
+                  <Input
+                    required
+                    value={profileData.company}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
+                    className="w-full"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Position</label>
+                  <Input
+                    required
+                    value={profileData.position}
+                    onChange={(e) => setProfileData(prev => ({ ...prev, position: e.target.value }))}
+                    className="w-full"
+                    placeholder="e.g. Software Engineer, Product Manager, etc."
+                  />
+                </div>
+                <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
+                  Complete Profile
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
@@ -82,8 +179,8 @@ const Auth = () => {
                 variables: {
                   default: {
                     colors: {
-                      brand: '#3B82F6', // Using blue-500 to match the logo
-                      brandAccent: '#2563EB', // blue-600 for hover state
+                      brand: '#3B82F6',
+                      brandAccent: '#2563EB',
                     },
                   },
                 },
