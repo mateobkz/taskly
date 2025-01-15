@@ -34,12 +34,8 @@ const TaskMetadataFields = ({ formData, handleChange }: TaskMetadataFieldsProps)
   const handleHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const hours = parseFloat(e.target.value) || 0;
     const minutes = hoursToMinutes(hours);
-    handleChange({
-      target: {
-        name: 'duration_minutes',
-        value: minutes
-      }
-    } as React.ChangeEvent<HTMLInputElement>);
+    // Instead of creating a synthetic event, pass the value directly using the string overload
+    handleChange(minutes.toString(), 'duration_minutes');
   };
 
   return (
