@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import Dashboard from "@/components/Dashboard";
 import TaskForm from "@/components/TaskFormNew";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -13,31 +13,92 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Check auth state on mount and handle session errors
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      console.log("Checking auth session:", session);
+      
+      if (error) {
+        console.error("Auth session error:", error);
+        toast({
+          title: "Session Error",
+          description: "Please sign in again",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
+
+      if (!session) {
+        console.log("No active session, redirecting to auth");
+        navigate("/auth");
+      }
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed:", event, session);
+      
+      if (event === 'TOKEN_REFRESHED') {
+        console.log("Token refreshed successfully");
+      }
+
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        console.log("User signed out or deleted, redirecting to auth");
+        navigate("/auth");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [navigate, toast]);
 
   const { data: tasks = [], refetch: refetchTasks } = useQuery({
     queryKey: ['tasks'],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log("No user found in tasks query");
+          return [];
+        }
 
-      const { data, error } = await supabase
-        .from('tasks')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('date_completed', { ascending: false });
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date_completed', { ascending: false });
 
-      if (error) throw error;
+        if (error) {
+          console.error("Error fetching tasks:", error);
+          throw error;
+        }
 
-      const typedTasks = data?.map(task => ({
-        ...task,
-        priority: task.priority as Task['priority'],
-        status: task.status as Task['status']
-      })) as Task[];
+        const typedTasks = data?.map(task => ({
+          ...task,
+          priority: task.priority as Task['priority'],
+          status: task.status as Task['status']
+        })) as Task[];
 
-      return typedTasks;
+        return typedTasks;
+      } catch (error) {
+        console.error("Error in tasks query:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch tasks. Please try again.",
+          variant: "destructive",
+        });
+        return [];
+      }
     },
   });
 
