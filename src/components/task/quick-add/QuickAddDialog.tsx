@@ -23,6 +23,7 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
+  const recordingTimeoutRef = useRef<number | null>(null);
   const { toast } = useToast();
 
   const startRecording = async () => {
@@ -40,6 +41,7 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
       });
       
       streamRef.current = stream;
+      console.log('Microphone access granted, stream created');
 
       // Create and configure MediaRecorder
       const recorder = new MediaRecorder(stream, {
@@ -48,6 +50,7 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
 
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
+          console.log('Received audio chunk of size:', event.data.size);
           audioChunksRef.current.push(event.data);
         }
       };
@@ -55,6 +58,8 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
       recorder.onstop = async () => {
         try {
           setIsProcessing(true);
+          console.log('Recording stopped, processing audio...');
+          
           const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           const reader = new FileReader();
           
@@ -90,10 +95,12 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
       mediaRecorderRef.current = recorder;
       recorder.start();
       setIsRecording(true);
+      console.log('Recording started');
 
-      // Automatically stop recording after 30 seconds
-      setTimeout(() => {
-        if (isRecording && mediaRecorderRef.current?.state === 'recording') {
+      // Set a timeout to automatically stop recording after 30 seconds
+      recordingTimeoutRef.current = window.setTimeout(() => {
+        if (isRecording) {
+          console.log('Auto-stopping recording after 30 seconds');
           stopRecording();
         }
       }, 30000);
@@ -115,21 +122,34 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
   };
 
   const stopRecording = () => {
+    console.log('Stopping recording...');
+    
+    // Clear the auto-stop timeout
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
+    }
+
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
+      console.log('MediaRecorder stopped');
       
       // Stop all tracks in the stream
       if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log('Audio track stopped');
+        });
         streamRef.current = null;
       }
     }
+    
+    setIsRecording(false);
   };
 
   const processAudio = async (base64Audio: string) => {
     try {
-      console.log('Processing audio...');
+      console.log('Sending audio to voice-to-text function...');
       const { data, error } = await supabase.functions.invoke('voice-to-text', {
         body: { audio: base64Audio }
       });
