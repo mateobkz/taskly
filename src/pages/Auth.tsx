@@ -74,7 +74,10 @@ const Auth = () => {
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setErrorMessage("User not found");
+        return;
+      }
 
       const domain = extractDomainFromCompany(profileData.company);
       const logoUrl = getCompanyLogo(domain);
@@ -82,7 +85,6 @@ const Auth = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          id: user.id,
           full_name: `${profileData.firstName} ${profileData.lastName}`,
           company_name: profileData.company,
           position: profileData.position,
@@ -174,47 +176,56 @@ const Auth = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const hashParams = new URLSearchParams(location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      
-      if (accessToken) {
-        console.log("Found access token in URL, setting session");
-        const { data: { session }, error } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: hashParams.get('refresh_token') || '',
-        });
+      try {
+        // First check URL hash for access token
+        const hashParams = new URLSearchParams(location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
         
-        if (error) {
-          console.error("Error setting session:", error);
-          setErrorMessage(getErrorMessage(error));
-          return;
-        }
+        if (accessToken) {
+          console.log("Found access token in URL, setting session");
+          const { data: { session }, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+          
+          if (error) {
+            console.error("Error setting session:", error);
+            setErrorMessage(getErrorMessage(error));
+            return;
+          }
 
-        if (session?.user) {
-          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-          const hasDashboard = await checkDashboardExists(session.user.id);
-          
-          if (!hasCompletedProfile) {
-            setOnboardingStep('profile');
-          } else if (!hasDashboard) {
-            setOnboardingStep('dashboard');
-          } else {
-            navigate("/", { replace: true });
+          if (session?.user) {
+            const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+            const hasDashboard = await checkDashboardExists(session.user.id);
+            
+            if (!hasCompletedProfile) {
+              setOnboardingStep('profile');
+            } else if (!hasDashboard) {
+              setOnboardingStep('dashboard');
+            } else {
+              navigate("/", { replace: true });
+            }
+          }
+        } else {
+          // If no access token in URL, check for existing session
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+            const hasDashboard = await checkDashboardExists(session.user.id);
+            
+            if (!hasCompletedProfile) {
+              setOnboardingStep('profile');
+            } else if (!hasDashboard) {
+              setOnboardingStep('dashboard');
+            } else {
+              navigate("/", { replace: true });
+            }
           }
         }
-      } else {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-          const hasDashboard = await checkDashboardExists(session.user.id);
-          
-          if (!hasCompletedProfile) {
-            setOnboardingStep('profile');
-          } else if (!hasDashboard) {
-            setOnboardingStep('dashboard');
-          } else {
-            navigate("/", { replace: true });
-          }
+      } catch (error) {
+        console.error("Error during auth check:", error);
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
         }
       }
     };
