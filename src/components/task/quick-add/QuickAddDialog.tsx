@@ -22,6 +22,7 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<BlobPart[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
   const { toast } = useToast();
 
   const startRecording = async () => {
@@ -37,6 +38,8 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
           sampleRate: 44100
         } 
       });
+      
+      streamRef.current = stream;
 
       // Create and configure MediaRecorder
       const recorder = new MediaRecorder(stream, {
@@ -70,6 +73,7 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
             description: "Failed to process audio recording. Please try again.",
             variant: "destructive",
           });
+          setIsProcessing(false);
         }
       };
 
@@ -87,9 +91,16 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
       recorder.start();
       setIsRecording(true);
 
+      // Automatically stop recording after 30 seconds
+      setTimeout(() => {
+        if (isRecording && mediaRecorderRef.current?.state === 'recording') {
+          stopRecording();
+        }
+      }, 30000);
+
       toast({
         title: "Recording Started",
-        description: "Speak clearly to describe your task.",
+        description: "Speak clearly to describe your task. Recording will stop after 30 seconds.",
       });
 
     } catch (error) {
@@ -104,23 +115,31 @@ const QuickAddDialog = ({ onTaskAdded }: QuickAddDialogProps) => {
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
       
       // Stop all tracks in the stream
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      mediaRecorderRef.current = null;
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
+      }
     }
   };
 
   const processAudio = async (base64Audio: string) => {
     try {
+      console.log('Processing audio...');
       const { data, error } = await supabase.functions.invoke('voice-to-text', {
         body: { audio: base64Audio }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error from voice-to-text function:', error);
+        throw error;
+      }
+
+      console.log('Transcription result:', data);
 
       if (data.text) {
         // Update the form with the transcribed text
