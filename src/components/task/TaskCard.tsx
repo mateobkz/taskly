@@ -54,98 +54,96 @@ const getStatusColor = (status: string | null) => {
 
 const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
   return (
-    <TooltipProvider>
-      <Card className="transition-all duration-200 hover:shadow-md bg-white/50 backdrop-blur-sm">
-        <CardContent className="p-4">
-          <div className="flex flex-col space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-2">
-                <h3 className="font-medium text-lg line-clamp-1">{task.title}</h3>
-                <div className="flex gap-2">
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Badge className={getDifficultyColor(task.difficulty)}>
-                          {task.difficulty}
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Task Difficulty</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <Badge className={getStatusColor(task.status)}>
-                          {getStatusIcon(task.status)}
-                          <span className="ml-1">{task.status || 'Not Started'}</span>
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p>Task Status</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-sm text-gray-600 line-clamp-2">
-              {task.description}
-            </p>
-
-            <div className="flex flex-wrap gap-2">
-              {task.skills_acquired.split(',').map((skill, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="bg-blue-50 text-blue-700 border-blue-200"
-                >
-                  {skill.trim()}
-                </Badge>
-              ))}
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm text-gray-500">
-                <Clock className="h-4 w-4" />
-                {formatDuration(task.duration_minutes)}
-              </div>
-
-              <div className="flex items-center gap-2">
-                <EnhanceTaskButton task={task} onTaskUpdated={() => onEdit(task)} />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onView(task)}
-                  className="text-blue-600 hover:bg-blue-50"
-                >
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onEdit(task)}
-                  className="text-yellow-600 hover:bg-yellow-50"
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onDelete(task.id)}
-                  className="text-red-600 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+    <Card className="transition-all duration-200 hover:shadow-md bg-white/50 backdrop-blur-sm">
+      <CardContent className="p-4">
+        <div className="flex flex-col space-y-4">
+          <div className="flex justify-between items-start">
+            <div className="space-y-2">
+              <h3 className="font-medium text-lg line-clamp-1">{task.title}</h3>
+              <div className="flex gap-2">
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge className={getDifficultyColor(task.difficulty)}>
+                        {task.difficulty}
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Task Difficulty</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <Badge className={getStatusColor(task.status)}>
+                        {getStatusIcon(task.status)}
+                        <span className="ml-1">{task.status || 'Not Started'}</span>
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Task Status</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
-    </TooltipProvider>
+
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {task.description}
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {task.skills_acquired.split(',').map((skill, index) => (
+              <Badge
+                key={index}
+                variant="outline"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                {skill.trim()}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Clock className="h-4 w-4" />
+              {formatDuration(task.duration_minutes)}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <EnhanceTaskButton task={task} onTaskUpdated={() => onEdit(task)} />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onView(task)}
+                className="text-blue-600 hover:bg-blue-50"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(task)}
+                className="text-yellow-600 hover:bg-yellow-50"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(task.id)}
+                className="text-red-600 hover:bg-red-50"
+              >
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

@@ -19,7 +19,7 @@ import { useToast } from "@/components/ui/use-toast";
 
 const Tasks = () => {
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [selectedDifficulty, setSelectedDifficulty] = React.useState<string | null>(null);
+  const [selectedDifficulty, setSelectedDifficulty] = React.useState<"Low" | "Medium" | "High" | null>(null);
   const [selectedStatus, setSelectedStatus] = React.useState<string | null>(null);
   const [isAddTaskOpen, setIsAddTaskOpen] = React.useState(false);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
@@ -35,7 +35,7 @@ const Tasks = () => {
         .from('tasks')
         .select('*')
         .eq('user_id', user.id)
-        .order('date_completed', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (searchQuery) {
         query = query.or(`title.ilike.%${searchQuery}%,skills_acquired.ilike.%${searchQuery}%`);
@@ -51,7 +51,10 @@ const Tasks = () => {
 
       const { data, error } = await query;
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching tasks:", error);
+        throw error;
+      }
 
       return data as Task[];
     },
@@ -107,7 +110,7 @@ const Tasks = () => {
             <div className="flex gap-4">
               <Select
                 value={selectedDifficulty || ""}
-                onValueChange={(value) => setSelectedDifficulty(value || null)}
+                onValueChange={(value) => setSelectedDifficulty(value as "Low" | "Medium" | "High" | null)}
               >
                 <SelectTrigger className="w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />
@@ -138,7 +141,7 @@ const Tasks = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {tasks.length > 0 ? (
               tasks.map((task) => (
                 <TaskCard
@@ -153,7 +156,9 @@ const Tasks = () => {
                 />
               ))
             ) : (
-              <p className="text-center text-gray-500 py-8">No tasks found</p>
+              <div className="col-span-full">
+                <p className="text-center text-gray-500 py-8">No tasks found</p>
+              </div>
             )}
           </div>
         </CardContent>
