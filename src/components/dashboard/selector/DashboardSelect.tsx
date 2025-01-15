@@ -26,7 +26,7 @@ const DashboardSelect = () => {
     >
       <SelectTrigger className="w-[280px] bg-white">
         <div className="flex items-center gap-2">
-          {currentDashboard?.logo_url && (
+          {currentDashboard?.logo_url ? (
             <img
               src={currentDashboard.logo_url}
               alt={currentDashboard.company_name || currentDashboard.name}
@@ -35,8 +35,9 @@ const DashboardSelect = () => {
                 e.currentTarget.src = "/placeholder.svg";
               }}
             />
+          ) : (
+            <Grid className="w-4 h-4" />
           )}
-          <Grid className="w-4 h-4" />
           <SelectValue placeholder="Select Dashboard" />
         </div>
       </SelectTrigger>
