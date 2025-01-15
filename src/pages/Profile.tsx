@@ -11,6 +11,7 @@ import { PlusCircle, Trash2, Upload, Link as LinkIcon } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfileData {
+  id: string; // Add id to the interface
   full_name: string;
   company_name: string;
   position: string;
@@ -24,6 +25,7 @@ interface ProfileData {
 
 const Profile = () => {
   const [profile, setProfile] = useState<ProfileData>({
+    id: '', // Initialize with empty string
     full_name: "",
     company_name: "",
     position: "",
@@ -118,6 +120,7 @@ const Profile = () => {
         .from('profiles')
         .update({
           ...profile,
+          id: user.id, // Add the required id field
           company_logo_url: logoUrl,
         })
         .eq('id', user.id);

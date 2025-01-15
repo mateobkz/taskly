@@ -66,7 +66,7 @@ export type Database = {
           company_logo_url?: string | null
           company_name?: string | null
           created_at?: string | null
-          full_name: string
+          full_name?: string | null
           id: string
           learning_goals?: string | null
           position?: string | null
@@ -82,7 +82,7 @@ export type Database = {
           company_name?: string | null
           created_at?: string | null
           full_name?: string | null
-          id: string
+          id?: string
           learning_goals?: string | null
           position?: string | null
           preferred_learning_style?: string | null
@@ -110,7 +110,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
-          date_completed?: string
+          date_completed: string
           date_ended?: string
           date_started?: string
           description: string
@@ -185,10 +185,10 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-      Row: infer R
-    }
-    ? R
-    : never
+        Row: infer R
+      }
+      ? R
+      : never
     : never
 
 export type TablesInsert<
@@ -260,10 +260,3 @@ export type CompositeTypes<
   : PublicCompositeTypeNameOrOptions extends keyof PublicSchema["CompositeTypes"]
     ? PublicSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
     : never
-
-export interface SocialLinks {
-  linkedin?: string;
-  github?: string;
-  twitter?: string;
-  [key: string]: string | undefined;
-}

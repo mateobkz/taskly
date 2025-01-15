@@ -53,6 +53,7 @@ const Auth = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
+          id: user.id, // Add the required id field
           full_name: `${profileData.firstName} ${profileData.lastName}`,
           company_name: profileData.company,
           position: profileData.position,
