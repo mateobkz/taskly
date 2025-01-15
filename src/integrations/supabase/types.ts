@@ -6,12 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface SocialLinks {
-  linkedin?: string;
-  github?: string;
-  twitter?: string;
-}
-
 export type Database = {
   public: {
     Tables: {
@@ -63,7 +57,7 @@ export type Database = {
           position: string | null
           preferred_learning_style: string | null
           skills: string[] | null
-          social_links: SocialLinks | null
+          social_links: Json | null
           updated_at: string | null
         }
         Insert: {
@@ -78,7 +72,7 @@ export type Database = {
           position?: string | null
           preferred_learning_style?: string | null
           skills?: string[] | null
-          social_links?: SocialLinks | null
+          social_links?: Json | null
           updated_at?: string | null
         }
         Update: {
@@ -93,7 +87,7 @@ export type Database = {
           position?: string | null
           preferred_learning_style?: string | null
           skills?: string[] | null
-          social_links?: SocialLinks | null
+          social_links?: Json | null
           updated_at?: string | null
         }
         Relationships: []
