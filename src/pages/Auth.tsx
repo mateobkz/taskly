@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import { AuthError } from "@supabase/supabase-js";
+import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -28,6 +29,9 @@ const Auth = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
+      const domain = extractDomainFromCompany(profileData.company);
+      const logoUrl = getCompanyLogo(domain);
+
       const { error } = await supabase.auth.updateUser({
         data: {
           full_name: `${profileData.firstName} ${profileData.lastName}`,
@@ -37,6 +41,19 @@ const Auth = () => {
       });
 
       if (error) throw error;
+
+      // Update the profile with the company logo
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: `${profileData.firstName} ${profileData.lastName}`,
+          company_name: profileData.company,
+          position: profileData.position,
+          company_logo_url: logoUrl
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
       
       navigate("/", { replace: true });
     } catch (error) {
@@ -133,6 +150,7 @@ const Auth = () => {
                     value={profileData.company}
                     onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
                     className="w-full"
+                    placeholder="e.g. Google, Microsoft, etc."
                   />
                 </div>
                 <div className="space-y-2">
