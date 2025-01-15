@@ -25,9 +25,12 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
     difficulty: initialData?.difficulty || "",
     key_challenges: initialData?.key_challenges || "",
     key_takeaways: initialData?.key_takeaways || "",
+    key_insights: initialData?.key_insights || "", // Added this field explicitly
     duration_minutes: initialData?.duration_minutes || 0,
     user_id: initialData?.user_id || null,
   });
+
+  console.log("Initial data received:", initialData); // Debug log
 
   useEffect(() => {
     const setUserId = async () => {
@@ -108,6 +111,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
           difficulty: "",
           key_challenges: "",
           key_takeaways: "",
+          key_insights: "",
           duration_minutes: 0,
           user_id: formData.user_id,
         });

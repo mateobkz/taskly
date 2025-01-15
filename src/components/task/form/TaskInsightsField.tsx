@@ -18,7 +18,7 @@ const TaskInsightsField = ({ formData, handleChange }: TaskInsightsFieldProps) =
       <Textarea
         id="key_insights"
         name="key_insights"
-        value={formData.key_insights}
+        value={formData.key_insights || ""}
         onChange={handleChange}
         placeholder="What were your main challenges and learnings from this task?"
         className="min-h-[120px] transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
