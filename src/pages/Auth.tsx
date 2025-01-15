@@ -108,12 +108,15 @@ const Auth = () => {
           </div>
         </div>
       </div>
-      <div className="hidden lg:block relative flex-1">
-        <img
-          className="absolute inset-0 h-full w-full object-cover"
-          src="/og-image.png"
-          alt="Learning dashboard background"
-        />
+      <div className="hidden lg:block relative w-1/2 bg-gradient-to-br from-blue-500/10 to-purple-500/10">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="text-center p-8 bg-white/10 backdrop-blur-sm rounded-lg max-w-md">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Track Your Learning Journey</h2>
+            <p className="text-gray-600">
+              Welcome to Taskly - your personal task tracking companion. Monitor your progress, celebrate achievements, and grow your skills.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
