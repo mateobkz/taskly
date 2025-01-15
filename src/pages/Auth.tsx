@@ -10,18 +10,31 @@ import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
 import { AuthError, AuthApiError } from "@supabase/supabase-js";
 import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Upload } from "lucide-react";
+
+type OnboardingStep = 'profile' | 'dashboard';
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [errorMessage, setErrorMessage] = useState("");
-  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('profile');
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
     company: "",
     position: "",
   });
+  const [dashboardData, setDashboardData] = useState({
+    name: "",
+    company_name: "",
+    position: "",
+    start_date: "",
+    end_date: "",
+    logo_url: "",
+  });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
 
   const checkProfileCompletion = async (userId: string) => {
     console.log("Checking profile completion for user:", userId);
@@ -53,7 +66,7 @@ const Auth = () => {
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          id: user.id, // Add the required id field
+          id: user.id,
           full_name: `${profileData.firstName} ${profileData.lastName}`,
           company_name: profileData.company,
           position: profileData.position,
@@ -63,16 +76,68 @@ const Auth = () => {
 
       if (profileError) throw profileError;
       
-      navigate("/", { replace: true });
+      // Move to dashboard creation step
+      setOnboardingStep('dashboard');
+      // Pre-fill dashboard data based on profile
+      setDashboardData(prev => ({
+        ...prev,
+        name: `${profileData.company} Experience`,
+        company_name: profileData.company,
+        position: profileData.position,
+      }));
     } catch (error) {
       console.error("Error updating profile:", error);
       setErrorMessage("Failed to update profile. Please try again.");
     }
   };
 
+  const handleDashboardSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      let logoUrl = dashboardData.logo_url;
+      if (logoFile) {
+        const fileExt = logoFile.name.split('.').pop();
+        const filePath = `${user.id}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('logos')
+          .upload(filePath, logoFile);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('logos')
+            .getPublicUrl(filePath);
+          logoUrl = publicUrl;
+        }
+      }
+
+      const { error: dashboardError } = await supabase
+        .from('dashboards')
+        .insert({
+          user_id: user.id,
+          name: dashboardData.name,
+          company_name: dashboardData.company_name,
+          position: dashboardData.position,
+          start_date: dashboardData.start_date,
+          end_date: dashboardData.end_date,
+          logo_url: logoUrl,
+        });
+
+      if (dashboardError) throw dashboardError;
+      
+      navigate("/", { replace: true });
+    } catch (error) {
+      console.error("Error creating dashboard:", error);
+      setErrorMessage("Failed to create dashboard. Please try again.");
+    }
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
-      // Check if we're handling an email confirmation
       const hashParams = new URLSearchParams(location.hash.substring(1));
       const accessToken = hashParams.get('access_token');
       
@@ -92,7 +157,7 @@ const Auth = () => {
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
           if (!hasCompletedProfile) {
-            setShowProfileForm(true);
+            setOnboardingStep('profile');
           } else {
             navigate("/", { replace: true });
           }
@@ -102,7 +167,7 @@ const Auth = () => {
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
           if (!hasCompletedProfile) {
-            setShowProfileForm(true);
+            setOnboardingStep('profile');
           } else {
             navigate("/", { replace: true });
           }
@@ -119,7 +184,7 @@ const Auth = () => {
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
           if (!hasCompletedProfile) {
-            setShowProfileForm(true);
+            setOnboardingStep('profile');
           } else {
             navigate("/", { replace: true });
           }
@@ -128,7 +193,7 @@ const Auth = () => {
       
       if (event === "SIGNED_OUT") {
         setErrorMessage("");
-        setShowProfileForm(false);
+        setOnboardingStep('profile');
       }
       
       if (event === "USER_UPDATED") {
@@ -157,7 +222,123 @@ const Auth = () => {
     return error.message;
   };
 
-  if (showProfileForm) {
+  if (onboardingStep === 'dashboard') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+        <Header />
+        <div className="container flex items-center justify-center min-h-screen py-20 px-4">
+          <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl font-bold text-primary">
+                Create Your First Dashboard
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleDashboardSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Dashboard Name</label>
+                  <Input
+                    required
+                    value={dashboardData.name}
+                    onChange={(e) => setDashboardData(prev => ({ ...prev, name: e.target.value }))}
+                    placeholder="My Experience at Company"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company Name</label>
+                  <Input
+                    value={dashboardData.company_name}
+                    onChange={(e) => setDashboardData(prev => ({ ...prev, company_name: e.target.value }))}
+                    placeholder="Company Name"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Position</label>
+                  <Input
+                    value={dashboardData.position}
+                    onChange={(e) => setDashboardData(prev => ({ ...prev, position: e.target.value }))}
+                    placeholder="Your Role"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Start Date</label>
+                    <Input
+                      type="date"
+                      value={dashboardData.start_date}
+                      onChange={(e) => setDashboardData(prev => ({ ...prev, start_date: e.target.value }))}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">End Date</label>
+                    <Input
+                      type="date"
+                      value={dashboardData.end_date}
+                      onChange={(e) => setDashboardData(prev => ({ ...prev, end_date: e.target.value }))}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company Logo</label>
+                  <div className="flex gap-4">
+                    <Input
+                      value={dashboardData.logo_url}
+                      onChange={(e) => setDashboardData(prev => ({ ...prev, logo_url: e.target.value }))}
+                      placeholder="Logo URL"
+                      className="flex-1"
+                    />
+                    <div className="relative">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id="logo-upload"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) setLogoFile(file);
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => document.getElementById('logo-upload')?.click()}
+                      >
+                        <Upload className="h-4 w-4 mr-2" />
+                        Upload
+                      </Button>
+                    </div>
+                  </div>
+                  {(dashboardData.logo_url || logoFile) && (
+                    <div className="mt-2 p-4 border rounded-lg">
+                      <img
+                        src={logoFile ? URL.createObjectURL(logoFile) : dashboardData.logo_url}
+                        alt="Preview"
+                        className="h-12 object-contain"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+
+                <Button type="submit" className="w-full">
+                  Create Dashboard & Get Started
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (onboardingStep === 'profile') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <Header />
@@ -211,7 +392,7 @@ const Auth = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
-                  Complete Profile
+                  Continue
                 </Button>
               </form>
             </CardContent>
