@@ -6,8 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Trash2, Upload } from "lucide-react";
+import { PlusCircle, Trash2, Upload, ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useNavigate } from "react-router-dom";
 
 interface ProfileData {
   id: string;
@@ -22,6 +23,7 @@ interface ProfileData {
 }
 
 const Profile = () => {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileData>({
     id: '',
     full_name: "",
@@ -166,6 +168,15 @@ const Profile = () => {
 
   return (
     <div className="container max-w-4xl py-8">
+      <Button 
+        variant="ghost" 
+        className="mb-4"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+
       <Card>
         <CardHeader>
           <CardTitle>Profile Settings</CardTitle>

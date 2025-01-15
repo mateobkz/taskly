@@ -6,18 +6,15 @@ import TaskCard from "@/components/task/TaskCard";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Filter, ListPlus, Search } from "lucide-react";
+import { Filter, ListPlus, Search, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import TaskForm from "@/components/TaskFormNew";
 import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Tasks = () => {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = React.useState("");
   const [selectedDifficulty, setSelectedDifficulty] = React.useState<"Low" | "Medium" | "High" | null>(null);
   const [selectedStatus, setSelectedStatus] = React.useState<string | null>(null);
@@ -90,6 +87,15 @@ const Tasks = () => {
 
   return (
     <div className="container py-20">
+      <Button 
+        variant="ghost" 
+        className="mb-4"
+        onClick={() => navigate(-1)}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
+
       <Card className="bg-white/50 backdrop-blur-sm">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-2xl font-bold">All Tasks</CardTitle>

@@ -18,12 +18,10 @@ const Auth = () => {
 
       if (event === 'SIGNED_IN' && session) {
         console.log("Auth state changed:", event, session.user.id);
-        // Check if profile is complete before redirecting
         checkProfileCompletion(session.user.id);
       }
     });
 
-    // Check initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         checkProfileCompletion(session.user.id);
@@ -48,7 +46,6 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // If profile exists, redirect to dashboard
       if (profile) {
         console.log("Profile found, redirecting to dashboard");
         navigate('/');
@@ -76,17 +73,17 @@ const Auth = () => {
   }
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="flex flex-col justify-center flex-1 px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-        <div className="w-full max-w-sm mx-auto lg:w-96">
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Welcome back</h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Sign in to your account to continue
-              </p>
-            </div>
+    <div className="min-h-screen bg-background flex">
+      <div className="flex-1 flex flex-col justify-center px-4 py-12 sm:px-6 lg:px-20 xl:px-24">
+        <div className="mx-auto w-full max-w-sm">
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold tracking-tight text-primary">Welcome back</h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Sign in to your account to continue
+            </p>
+          </div>
 
+          <div className="bg-white/50 backdrop-blur-sm p-6 rounded-lg shadow-sm">
             <SupabaseAuth
               supabaseClient={supabase}
               appearance={{
@@ -94,10 +91,15 @@ const Auth = () => {
                 variables: {
                   default: {
                     colors: {
-                      brand: 'rgb(147 51 234)',
-                      brandAccent: 'rgb(126 34 206)',
+                      brand: '#1E293B',
+                      brandAccent: '#3B82F6',
                     },
                   },
+                },
+                className: {
+                  container: 'w-full',
+                  button: 'w-full px-4 py-2 rounded-md',
+                  input: 'w-full px-4 py-2 rounded-md border border-gray-300',
                 },
               }}
               providers={[]}
@@ -106,9 +108,9 @@ const Auth = () => {
           </div>
         </div>
       </div>
-      <div className="relative flex-1 hidden w-0 lg:block">
+      <div className="hidden lg:block relative flex-1">
         <img
-          className="absolute inset-0 object-cover w-full h-full"
+          className="absolute inset-0 h-full w-full object-cover"
           src="/og-image.png"
           alt="Learning dashboard background"
         />
