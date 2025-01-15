@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
 import { AuthError } from "@supabase/supabase-js";
+import { UserPlus, Key } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -92,11 +93,40 @@ const Auth = () => {
                   button: 'bg-primary hover:bg-primary/90',
                   label: 'text-sm font-medium text-gray-700',
                   input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
+                  message: 'text-sm text-red-600',
+                  anchor: 'text-sm text-primary hover:text-primary/80 flex items-center gap-2',
                 },
               }}
               providers={[]}
               view="sign_in"
-              showLinks={false}
+              localization={{
+                variables: {
+                  sign_in: {
+                    email_label: 'Email address',
+                    password_label: 'Password',
+                    button_label: 'Sign in',
+                    link_text: 'Already have an account? Sign in',
+                  },
+                  sign_up: {
+                    email_label: 'Email address',
+                    password_label: 'Create a password',
+                    button_label: 'Create account',
+                    link_text: (<div className="flex items-center gap-2">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Don't have an account? Sign up</span>
+                    </div>),
+                  },
+                  forgotten_password: {
+                    email_label: 'Email address',
+                    button_label: 'Send reset instructions',
+                    link_text: (<div className="flex items-center gap-2">
+                      <Key className="h-4 w-4" />
+                      <span>Forgot your password?</span>
+                    </div>),
+                  },
+                },
+              }}
+              showLinks={true}
             />
           </CardContent>
         </Card>
