@@ -3,7 +3,7 @@ import { Task } from "@/types/task";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2, Clock, CheckCircle, CircleSlash, CirclePlay, ArrowUp, ArrowDown } from "lucide-react";
+import { Eye, Pencil, Trash2, Clock, CheckCircle, CircleSlash, CirclePlay } from "lucide-react";
 import EnhanceTaskButton from "./EnhanceTaskButton";
 import { formatDuration } from "@/utils/timeUtils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -24,17 +24,6 @@ const getStatusIcon = (status: string | null) => {
     case 'not started':
     default:
       return <CircleSlash className="h-4 w-4" />;
-  }
-};
-
-const getPriorityIcon = (priority: string | null) => {
-  switch (priority?.toLowerCase()) {
-    case 'high':
-      return <ArrowUp className="h-4 w-4" />;
-    case 'low':
-      return <ArrowDown className="h-4 w-4" />;
-    default:
-      return null;
   }
 };
 
@@ -73,42 +62,32 @@ const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
               <div className="space-y-2">
                 <h3 className="font-medium text-lg line-clamp-1">{task.title}</h3>
                 <div className="flex gap-2">
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Badge className={getDifficultyColor(task.difficulty)}>
-                        {task.difficulty}
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Difficulty: {task.difficulty}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Badge className={getStatusColor(task.status)}>
-                        {getStatusIcon(task.status)}
-                        <span className="ml-1">{task.status || 'Not Started'}</span>
-                      </Badge>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Status: {task.status || 'Not Started'}</p>
-                    </TooltipContent>
-                  </Tooltip>
-                  
-                  {task.priority && (
+                  <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger>
-                        <Badge variant="outline" className="flex items-center gap-1">
-                          {getPriorityIcon(task.priority)}
-                          {task.priority}
+                        <Badge className={getDifficultyColor(task.difficulty)}>
+                          {task.difficulty}
                         </Badge>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Priority: {task.priority}</p>
+                        <p>Task Difficulty</p>
                       </TooltipContent>
                     </Tooltip>
-                  )}
+                  </TooltipProvider>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Badge className={getStatusColor(task.status)}>
+                          {getStatusIcon(task.status)}
+                          <span className="ml-1">{task.status || 'Not Started'}</span>
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Task Status</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
               </div>
             </div>

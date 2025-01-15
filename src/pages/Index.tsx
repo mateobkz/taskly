@@ -8,6 +8,7 @@ import Header from "@/components/layout/Header";
 import CalendarView from "@/components/calendar/CalendarView";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import Profile from "./Profile";
+import Tasks from "./Tasks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task";
@@ -29,7 +30,6 @@ const Index = () => {
 
       if (error) throw error;
 
-      // Type assertion and validation for tasks
       const typedTasks = data?.map(task => ({
         ...task,
         priority: task.priority as Task['priority'],
@@ -62,6 +62,12 @@ const Index = () => {
                 Dashboard
               </TabsTrigger>
               <TabsTrigger 
+                value="tasks"
+                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+              >
+                Tasks
+              </TabsTrigger>
+              <TabsTrigger 
                 value="calendar"
                 className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
               >
@@ -84,6 +90,10 @@ const Index = () => {
           
           <TabsContent value="dashboard" className="space-y-4">
             <Dashboard />
+          </TabsContent>
+
+          <TabsContent value="tasks" className="space-y-4">
+            <Tasks />
           </TabsContent>
 
           <TabsContent value="calendar" className="space-y-4">
