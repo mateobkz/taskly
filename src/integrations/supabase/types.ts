@@ -78,8 +78,7 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes: number
           id: number
-          key_challenges: string
-          key_takeaways: string
+          key_insights: string | null
           skills_acquired: string
           title: string
           updated_at: string
@@ -94,8 +93,7 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
           id?: number
-          key_challenges: string
-          key_takeaways: string
+          key_insights?: string | null
           skills_acquired: string
           title: string
           updated_at?: string
@@ -110,8 +108,7 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
           id?: number
-          key_challenges?: string
-          key_takeaways?: string
+          key_insights?: string | null
           skills_acquired?: string
           title?: string
           updated_at?: string

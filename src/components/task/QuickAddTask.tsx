@@ -105,8 +105,8 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
           date_completed: parsedTask.date_ended || prev.date_completed,
           difficulty: (parsedTask.difficulty as DifficultyLevel) || prev.difficulty,
           skills_acquired: parsedTask.skills_acquired || prev.skills_acquired,
-          key_challenges: parsedTask.key_challenges || prev.key_challenges,
-          key_takeaways: parsedTask.key_takeaways || prev.key_takeaways,
+          key_insights: parsedTask.key_insights || prev.key_insights,
+          duration_minutes: parsedTask.duration_minutes || prev.duration_minutes,
         }))
         setClarificationNeeded(false)
         setShowPreview(true)
@@ -443,4 +443,4 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   )
 }
 
-export default QuickAddTask
+export default QuickAddTask;

@@ -30,7 +30,6 @@ serve(async (req) => {
       throw new Error('Task description is required');
     }
 
-    // Fetch user's recent tasks for context
     const { data: recentTasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
@@ -70,7 +69,7 @@ serve(async (req) => {
           "date_ended": "YYYY-MM-DD",
           "difficulty": "Low/Medium/High",
           "skills_acquired": "Comma-separated list",
-          "key_insights": "Combined challenges and takeaways in a clear format",
+          "key_insights": "Combined insights including both challenges and takeaways",
           "duration_minutes": 30
         }
       }
@@ -119,7 +118,6 @@ serve(async (req) => {
 
     let parsedResponse;
     try {
-      // Try to parse the response content as JSON
       parsedResponse = JSON.parse(data.choices[0].message.content.trim());
       console.log('Successfully parsed response:', parsedResponse);
     } catch (error) {
@@ -128,7 +126,6 @@ serve(async (req) => {
       throw new Error('Failed to parse OpenAI response as JSON');
     }
 
-    // Validate the response structure
     if (typeof parsedResponse.needsClarification !== 'boolean') {
       throw new Error('Invalid response format: missing or invalid needsClarification field');
     }

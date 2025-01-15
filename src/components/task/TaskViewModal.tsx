@@ -2,7 +2,7 @@ import React from "react"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Task } from "@/types/task"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, Book, Star, Trophy, AlertTriangle, Lightbulb, Clock } from "lucide-react"
+import { Calendar, Book, Star, Lightbulb, Clock } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 
 interface TaskViewModalProps {
@@ -87,15 +87,9 @@ const TaskViewModal = ({ task, open, onOpenChange }: TaskViewModalProps) => {
           />
 
           <TaskSection 
-            icon={AlertTriangle}
-            title="Key Challenges"
-            content={task.key_challenges}
-          />
-
-          <TaskSection 
             icon={Lightbulb}
-            title="Key Takeaways"
-            content={task.key_takeaways}
+            title="Key Insights"
+            content={task.key_insights}
           />
 
           <div className="flex flex-wrap gap-2 mt-4">
