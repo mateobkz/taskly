@@ -1,0 +1,247 @@
+import React, { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2, Mic, MicOff, Play, RotateCcw, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+
+interface AudioRecorderProps {
+  onTranscriptionComplete: (text: string) => void;
+}
+
+const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [hasRecording, setHasRecording] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<BlobPart[]>([]);
+  const streamRef = useRef<MediaStream | null>(null);
+  const recordingTimeoutRef = useRef<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { toast } = useToast();
+
+  const startRecording = async () => {
+    try {
+      // Reset audio chunks
+      audioChunksRef.current = [];
+      setHasRecording(false);
+
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 44100
+        } 
+      });
+      
+      streamRef.current = stream;
+      console.log('Microphone access granted, stream created');
+
+      const recorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          console.log('Received audio chunk of size:', event.data.size);
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        console.log('Recording stopped');
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (audioRef.current) {
+          audioRef.current.src = URL.createObjectURL(audioBlob);
+        }
+        setHasRecording(true);
+      };
+
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        toast({
+          title: "Recording Error",
+          description: "An error occurred while recording. Please try again.",
+          variant: "destructive",
+        });
+        stopRecording();
+      };
+
+      mediaRecorderRef.current = recorder;
+      recorder.start();
+      setIsRecording(true);
+      console.log('Recording started');
+
+      recordingTimeoutRef.current = window.setTimeout(() => {
+        if (isRecording) {
+          console.log('Auto-stopping recording after 30 seconds');
+          stopRecording();
+        }
+      }, 30000);
+
+      toast({
+        title: "Recording Started",
+        description: "Speak clearly to describe your task. Recording will stop after 30 seconds.",
+      });
+
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast({
+        title: "Microphone Access Error",
+        description: "Could not access microphone. Please check your permissions and try again.",
+        variant: "destructive",
+      });
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    console.log('Stopping recording...');
+    
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
+    }
+
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+      console.log('MediaRecorder stopped');
+      
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => {
+          track.stop();
+          console.log('Audio track stopped');
+        });
+        streamRef.current = null;
+      }
+    }
+    
+    setIsRecording(false);
+  };
+
+  const processAudio = async () => {
+    if (!hasRecording) return;
+
+    try {
+      setIsProcessing(true);
+      console.log('Processing recorded audio...');
+
+      const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+      const reader = new FileReader();
+      
+      reader.onload = async () => {
+        if (typeof reader.result === 'string') {
+          const base64Audio = reader.result.split(',')[1];
+          
+          console.log('Sending audio to voice-to-text function...');
+          const { data, error } = await supabase.functions.invoke('voice-to-text', {
+            body: { audio: base64Audio }
+          });
+
+          if (error) throw error;
+
+          console.log('Transcription result:', data);
+          if (data.text) {
+            onTranscriptionComplete(data.text);
+            toast({
+              title: "Success",
+              description: "Voice input processed successfully!",
+            });
+          }
+        }
+      };
+      
+      reader.readAsDataURL(audioBlob);
+    } catch (error) {
+      console.error('Error processing audio:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process voice input. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const playRecording = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const resetRecording = () => {
+    if (audioRef.current) {
+      audioRef.current.src = '';
+    }
+    setHasRecording(false);
+    setIsPlaying(false);
+    audioChunksRef.current = [];
+  };
+
+  return (
+    <div className="flex items-center gap-2">
+      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} className="hidden" />
+      
+      {!hasRecording ? (
+        <Button
+          variant="outline"
+          size="icon"
+          className={isRecording ? 'bg-red-100 text-red-600 hover:bg-red-200 animate-pulse' : ''}
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={isProcessing}
+        >
+          {isProcessing ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isRecording ? (
+            <MicOff className="h-4 w-4" />
+          ) : (
+            <Mic className="h-4 w-4" />
+          )}
+        </Button>
+      ) : (
+        <>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={playRecording}
+            disabled={isProcessing}
+          >
+            <Play className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={resetRecording}
+            disabled={isProcessing}
+          >
+            <RotateCcw className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="default"
+            size="icon"
+            onClick={processAudio}
+            disabled={isProcessing}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            {isProcessing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="h-4 w-4" />
+            )}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+};
+
+export default AudioRecorder;
