@@ -17,7 +17,8 @@ const Auth = () => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        console.log("User already has a session, redirecting to /");
+        navigate("/", { replace: true });
       }
     };
     
@@ -26,8 +27,9 @@ const Auth = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed in Auth component:", event, !!session);
       
-      if (event === "SIGNED_IN" && session) {
-        navigate("/");
+      if (session) {
+        console.log("Session exists, redirecting to /");
+        navigate("/", { replace: true });
       }
       // Clear error message when user signs out
       if (event === "SIGNED_OUT") {

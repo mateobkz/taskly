@@ -33,20 +33,14 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       }
     };
 
+    checkSession();
+
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       console.log("Auth state changed:", event, !!session);
-      
-      if (event === 'SIGNED_OUT') {
-        setIsAuthenticated(false);
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setIsAuthenticated(true);
-      }
-      
+      setIsAuthenticated(!!session);
       setIsLoading(false);
     });
-
-    checkSession();
 
     return () => {
       subscription.unsubscribe();
