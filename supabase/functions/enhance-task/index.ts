@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { Configuration, OpenAIApi } from "https://esm.sh/openai@3.1.0"
+import OpenAI from 'https://esm.sh/openai@4.20.1'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { taskId } = await req.json()
+    console.log('Enhancing task:', taskId)
 
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -27,12 +28,16 @@ serve(async (req) => {
       .eq('id', taskId)
       .single()
 
-    if (fetchError) throw fetchError
+    if (fetchError) {
+      console.error('Error fetching task:', fetchError)
+      throw fetchError
+    }
 
-    const configuration = new Configuration({
+    console.log('Task fetched:', task)
+
+    const openai = new OpenAI({
       apiKey: Deno.env.get('OPENAI_API_KEY'),
     })
-    const openai = new OpenAIApi(configuration)
 
     const prompt = `
     Task Title: ${task.title}
@@ -51,7 +56,9 @@ serve(async (req) => {
     - enhancedInsights
     `
 
-    const completion = await openai.createChatCompletion({
+    console.log('Sending prompt to OpenAI')
+
+    const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
@@ -65,14 +72,17 @@ serve(async (req) => {
       ]
     })
 
-    const enhancedContent = JSON.parse(completion.data.choices[0].message.content)
+    console.log('Received response from OpenAI')
+
+    const enhancedContent = JSON.parse(completion.choices[0].message.content)
+    console.log('Parsed enhanced content:', enhancedContent)
 
     return new Response(
       JSON.stringify(enhancedContent),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error in enhance-task function:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
