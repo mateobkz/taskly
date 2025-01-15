@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/layout/Header";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
 
 const Auth = () => {
@@ -57,7 +57,6 @@ const Auth = () => {
 
       if (error) throw error;
 
-      // Update the profile with the company logo
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
@@ -124,14 +123,17 @@ const Auth = () => {
   }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
-    switch (error.message) {
-      case "Invalid login credentials":
-        return "Invalid email or password. Please check your credentials and try again.";
-      case "Email not confirmed":
-        return "Please verify your email address before signing in.";
-      default:
-        return error.message;
+    if (error instanceof AuthApiError) {
+      switch (error.message) {
+        case "Invalid login credentials":
+          return "Invalid email or password. Please check your credentials and try again.";
+        case "Email not confirmed":
+          return "Please verify your email address before signing in.";
+        default:
+          return error.message;
+      }
     }
+    return error.message;
   };
 
   if (showProfileForm) {
