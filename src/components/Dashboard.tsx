@@ -10,14 +10,15 @@ import TaskList from "./dashboard/TaskList";
 import InsightsSection from "./dashboard/InsightsSection";
 import TimeSpentChart from "./dashboard/charts/TimeSpentChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartBar, Clock } from "lucide-react";
+import { ChartBar, Clock, ListPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import TaskForm from "@/components/TaskFormNew"; // Using TaskFormNew instead of TaskForm
+import TaskForm from "@/components/TaskFormNew";
+import { Button } from "./ui/button";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -260,11 +261,20 @@ const Dashboard = () => {
           <GoalProgress goals={goals} />
           
           <Card className="bg-white/50 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
               <CardTitle className="flex items-center gap-2">
                 <Clock className="h-5 w-5" />
                 Recent Tasks
               </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/tasks')}
+                className="text-blue-600 hover:bg-blue-50"
+              >
+                <ListPlus className="h-4 w-4 mr-2" />
+                View All
+              </Button>
             </CardHeader>
             <CardContent>
               <TaskList 
@@ -297,7 +307,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Keep existing dialog for task editing */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
