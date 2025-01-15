@@ -42,11 +42,11 @@ const Tasks = () => {
       }
 
       if (selectedDifficulty) {
-        query = query.eq('difficulty', selectedDifficulty);
+        query = query.eq('difficulty', selectedDifficulty as Task['difficulty']);
       }
 
       if (selectedStatus) {
-        query = query.eq('status', selectedStatus);
+        query = query.eq('status', selectedStatus as Task['status']);
       }
 
       const { data, error } = await query;
@@ -56,7 +56,11 @@ const Tasks = () => {
         throw error;
       }
 
-      return data as Task[];
+      return (data || []).map(task => ({
+        ...task,
+        priority: task.priority || 'Medium',
+        status: task.status || 'Not Started'
+      })) as Task[];
     },
   });
 

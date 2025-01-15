@@ -67,13 +67,13 @@ const Dashboard = () => {
 
       if (error) throw error;
       
-      const typedTasks = data?.map(task => ({
+      const typedTasks = (data || []).map(task => ({
         ...task,
-        priority: task.priority as Task['priority'],
-        status: task.status as Task['status']
+        priority: task.priority || 'Medium',
+        status: task.status || 'Not Started'
       })) as Task[];
       
-      setTasks(typedTasks || []);
+      setTasks(typedTasks);
       
       // Update goal progress when tasks are fetched
       updateGoalProgress(typedTasks);
@@ -161,12 +161,12 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      const typedGoals = data?.map(goal => ({
+      const typedGoals = (data || []).map(goal => ({
         ...goal,
         period: goal.period as Goal['period']
       })) as Goal[];
 
-      setGoals(typedGoals || []);
+      setGoals(typedGoals);
     } catch (error) {
       console.error("Error fetching goals:", error);
       toast({
