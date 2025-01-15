@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,6 +13,7 @@ import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [errorMessage, setErrorMessage] = useState("");
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [profileData, setProfileData] = useState({
@@ -23,6 +24,7 @@ const Auth = () => {
   });
 
   const checkProfileCompletion = async (userId: string) => {
+    console.log("Checking profile completion for user:", userId);
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('full_name, company_name, position')
@@ -46,16 +48,7 @@ const Auth = () => {
 
       const domain = extractDomainFromCompany(profileData.company);
       const logoUrl = getCompanyLogo(domain);
-
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: `${profileData.firstName} ${profileData.lastName}`,
-          company_name: profileData.company,
-          position: profileData.position
-        }
-      });
-
-      if (error) throw error;
+      console.log("Company logo URL:", logoUrl);
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -78,13 +71,40 @@ const Auth = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-        if (!hasCompletedProfile) {
-          setShowProfileForm(true);
-        } else {
-          navigate("/", { replace: true });
+      // Check if we're handling an email confirmation
+      const hashParams = new URLSearchParams(location.hash.substring(1));
+      const accessToken = hashParams.get('access_token');
+      
+      if (accessToken) {
+        console.log("Found access token in URL, setting session");
+        const { data: { session }, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get('refresh_token') || '',
+        });
+        
+        if (error) {
+          console.error("Error setting session:", error);
+          setErrorMessage(getErrorMessage(error));
+          return;
+        }
+
+        if (session?.user) {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          if (!hasCompletedProfile) {
+            setShowProfileForm(true);
+          } else {
+            navigate("/", { replace: true });
+          }
+        }
+      } else {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          if (!hasCompletedProfile) {
+            setShowProfileForm(true);
+          } else {
+            navigate("/", { replace: true });
+          }
         }
       }
     };
@@ -120,7 +140,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, location]);
 
   const getErrorMessage = (error: AuthError) => {
     if (error instanceof AuthApiError) {
