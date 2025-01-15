@@ -20,7 +20,7 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
     description: initialData?.description || "",
     date_started: initialData?.date_started || new Date().toISOString().split('T')[0],
     date_ended: initialData?.date_ended || new Date().toISOString().split('T')[0],
-    date_completed: initialData?.date_completed || new Date().toISOString().split('T')[0], // Keep for backward compatibility
+    date_completed: initialData?.date_completed || new Date().toISOString().split('T')[0],
     skills_acquired: initialData?.skills_acquired || "",
     difficulty: initialData?.difficulty || "",
     key_challenges: initialData?.key_challenges || "",
@@ -54,25 +54,39 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log("Submitting form data:", formData);
+    console.log("Is editing:", isEditing);
+    console.log("Initial data ID:", initialData?.id);
     
     try {
       if (isEditing && initialData?.id) {
+        console.log("Updating task with ID:", initialData.id);
         const { error } = await supabase
           .from('tasks')
           .update(formData)
-          .eq('id', initialData.id);
+          .eq('id', initialData.id)
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error updating task:", error);
+          throw error;
+        }
+        
         toast({
           title: "Success",
           description: "Task has been updated successfully",
         });
       } else {
+        console.log("Creating new task");
         const { error } = await supabase
           .from('tasks')
-          .insert([formData]);
+          .insert([formData])
+          .select();
         
-        if (error) throw error;
+        if (error) {
+          console.error("Error creating task:", error);
+          throw error;
+        }
+        
         toast({
           title: "Success",
           description: "Task has been saved successfully",
