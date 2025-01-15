@@ -7,6 +7,7 @@ import QuickAddTask from "@/components/task/QuickAddTask";
 import Header from "@/components/layout/Header";
 import CalendarView from "@/components/calendar/CalendarView";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
+import Profile from "./Profile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -63,6 +64,12 @@ const Index = () => {
               >
                 Add Task
               </TabsTrigger>
+              <TabsTrigger 
+                value="profile"
+                className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
+              >
+                Profile
+              </TabsTrigger>
             </TabsList>
           </div>
           
@@ -76,6 +83,10 @@ const Index = () => {
           
           <TabsContent value="add-task">
             <TaskForm onTaskAdded={handleTaskAdded} />
+          </TabsContent>
+
+          <TabsContent value="profile">
+            <Profile />
           </TabsContent>
         </Tabs>
         

@@ -4,6 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { Trophy } from "lucide-react";
 import { Task } from "@/types/task";
 import { supabase } from "@/integrations/supabase/client";
+import { extractDomainFromCompany } from "@/utils/companyUtils";
 
 interface HeroSectionProps {
   tasks: Task[];
@@ -11,15 +12,32 @@ interface HeroSectionProps {
 
 const HeroSection = ({ tasks }: HeroSectionProps) => {
   const [userEmail, setUserEmail] = useState<string>("");
+  const [companyLogo, setCompanyLogo] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
 
   useEffect(() => {
-    const getUserEmail = async () => {
+    const getUserProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         setUserEmail(user.email || "");
+        
+        // Fetch profile data including company name
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('full_name, company_name')
+          .eq('id', user.id)
+          .single();
+
+        if (profile) {
+          setUserName(profile.full_name || "");
+          if (profile.company_name) {
+            const domain = extractDomainFromCompany(profile.company_name);
+            setCompanyLogo(`https://logo.clearbit.com/${domain}`);
+          }
+        }
       }
     };
-    getUserEmail();
+    getUserProfile();
   }, []);
 
   const calculateWeeklyProgress = () => {
@@ -36,20 +54,6 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
 
   const progress = calculateWeeklyProgress();
 
-  const getFirstName = (email: string) => {
-    if (email === "aysel.martinez@alumni.esade.edu") {
-      return "Aysel";
-    }
-    return "Mateo";
-  };
-
-  const getCompanyLogo = (email: string) => {
-    if (email === "aysel.martinez@alumni.esade.edu") {
-      return "/lovable-uploads/9ffe8aca-7316-4ca9-8874-f1666475daf5.png";
-    }
-    return "/lovable-uploads/8705599b-73a8-4967-8c21-fd6f78dd12dd.png";
-  };
-
   return (
     <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-none shadow-sm">
       <CardContent className="p-6">
@@ -58,13 +62,19 @@ const HeroSection = ({ tasks }: HeroSectionProps) => {
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold text-primary">
-                  Welcome, {getFirstName(userEmail)}! Keep up the great work!
+                  Welcome, {userName || "User"}! Keep up the great work!
                 </h1>
-                <img 
-                  src={getCompanyLogo(userEmail)} 
-                  alt="Company Logo" 
-                  className="h-8 object-contain ml-8"
-                />
+                {companyLogo && (
+                  <img 
+                    src={companyLogo} 
+                    alt="Company Logo" 
+                    className="h-8 object-contain ml-8"
+                    onError={(e) => {
+                      // Fallback to a default image if the logo fails to load
+                      e.currentTarget.src = "/placeholder.svg";
+                    }}
+                  />
+                )}
               </div>
               <p className="text-muted-foreground">
                 Track your learning journey and celebrate your progress
