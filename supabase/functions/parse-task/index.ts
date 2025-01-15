@@ -44,38 +44,50 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Extract task details from natural language input. Return a JSON object with:
-              - title (string)
-              - date_started (YYYY-MM-DD)
-              - date_ended (YYYY-MM-DD)
-              - difficulty (string: "Low", "Medium", or "High")
-              - skills_acquired (comma-separated string)
-              If any field cannot be determined, return null for that field.
-              ONLY return the JSON object, nothing else.`
+            content: `You are a task parser that extracts structured information from natural language descriptions.
+              Return a JSON object with these fields:
+              - title (string): A clear, concise title for the task
+              - date_started (YYYY-MM-DD): The start date, default to today if not specified
+              - date_ended (YYYY-MM-DD): The end date, default to today if not specified
+              - difficulty (string): Must be exactly "Low", "Medium", or "High"
+              - skills_acquired (string): Comma-separated list of skills
+              Only return the JSON object, no other text.`
           },
-          { role: 'user', content: taskDescription }
+          {
+            role: 'user',
+            content: taskDescription
+          }
         ],
         temperature: 0.3,
+        max_tokens: 500,
       }),
     });
 
+    console.log('OpenAI API response status:', openAIResponse.status);
+
     if (!openAIResponse.ok) {
-      const errorData = await openAIResponse.text();
-      console.error('OpenAI API error:', errorData);
-      throw new Error('Failed to process task description');
+      const errorText = await openAIResponse.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${openAIResponse.status}`);
     }
 
     const data = await openAIResponse.json();
-    console.log('OpenAI response:', data);
+    console.log('OpenAI response data:', data);
 
     if (!data.choices?.[0]?.message?.content) {
-      throw new Error('Invalid response from OpenAI');
+      throw new Error('Invalid response format from OpenAI');
     }
 
     let parsedTask;
     try {
       parsedTask = JSON.parse(data.choices[0].message.content);
       console.log('Successfully parsed task:', parsedTask);
+
+      // Validate the required fields
+      if (!parsedTask.title || !parsedTask.difficulty || 
+          !['Low', 'Medium', 'High'].includes(parsedTask.difficulty)) {
+        throw new Error('Invalid task format returned from OpenAI');
+      }
     } catch (e) {
       console.error('Failed to parse OpenAI response:', e);
       throw new Error('Failed to parse task details');
@@ -95,7 +107,7 @@ serve(async (req) => {
     console.error('Error in parse-task function:', error);
     return new Response(
       JSON.stringify({ 
-        error: error.message,
+        error: error.message || 'Failed to process task description',
         details: error.stack 
       }),
       { 
