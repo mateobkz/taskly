@@ -22,6 +22,7 @@ const Auth = () => {
   const { toast } = useToast();
   const [errorMessage, setErrorMessage] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth');
+  const [isLoading, setIsLoading] = useState(false);
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -40,37 +41,48 @@ const Auth = () => {
 
   const checkProfileCompletion = async (userId: string) => {
     console.log("Checking profile completion for user:", userId);
-    const { data: profile, error } = await supabase
-      .from('profiles')
-      .select('full_name, company_name, position')
-      .eq('id', userId)
-      .single();
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('full_name, company_name, position')
+        .eq('id', userId)
+        .single();
 
-    if (error) {
-      console.error("Error checking profile:", error);
+      if (error) {
+        console.error("Error checking profile:", error);
+        return false;
+      }
+
+      return !!(profile?.full_name && profile?.company_name && profile?.position);
+    } catch (error) {
+      console.error("Error in checkProfileCompletion:", error);
       return false;
     }
-
-    return !!(profile?.full_name && profile?.company_name && profile?.position);
   };
 
   const checkDashboardExists = async (userId: string) => {
-    const { data: dashboards, error } = await supabase
-      .from('dashboards')
-      .select('id')
-      .eq('user_id', userId)
-      .limit(1);
+    try {
+      const { data: dashboards, error } = await supabase
+        .from('dashboards')
+        .select('id')
+        .eq('user_id', userId)
+        .limit(1);
 
-    if (error) {
-      console.error("Error checking dashboards:", error);
+      if (error) {
+        console.error("Error checking dashboards:", error);
+        return false;
+      }
+
+      return dashboards && dashboards.length > 0;
+    } catch (error) {
+      console.error("Error in checkDashboardExists:", error);
       return false;
     }
-
-    return dashboards && dashboards.length > 0;
   };
 
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -104,11 +116,14 @@ const Auth = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
       setErrorMessage("Failed to update profile. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const handleDashboardSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -133,14 +148,6 @@ const Auth = () => {
           logoUrl = publicUrl;
         }
       }
-
-      console.log("Creating dashboard with data:", {
-        user_id: user.id,
-        name: dashboardData.name,
-        company_name: dashboardData.company_name,
-        position: dashboardData.position,
-        logo_url: logoUrl,
-      });
 
       const { error: dashboardError } = await supabase
         .from('dashboards')
@@ -171,72 +178,19 @@ const Auth = () => {
         description: "Failed to create dashboard",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     const checkAuth = async () => {
+      setIsLoading(true);
       try {
-        // First check URL hash for access token
-        const hashParams = new URLSearchParams(location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (accessToken) {
-          console.log("Found access token in URL, setting session");
-          const { data: { session }, error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: hashParams.get('refresh_token') || '',
-          });
-          
-          if (error) {
-            console.error("Error setting session:", error);
-            setErrorMessage(getErrorMessage(error));
-            return;
-          }
-
-          if (session?.user) {
-            const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-            const hasDashboard = await checkDashboardExists(session.user.id);
-            
-            if (!hasCompletedProfile) {
-              setOnboardingStep('profile');
-            } else if (!hasDashboard) {
-              setOnboardingStep('dashboard');
-            } else {
-              navigate("/", { replace: true });
-            }
-          }
-        } else {
-          // If no access token in URL, check for existing session
-          const { data: { session } } = await supabase.auth.getSession();
-          if (session?.user) {
-            const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-            const hasDashboard = await checkDashboardExists(session.user.id);
-            
-            if (!hasCompletedProfile) {
-              setOnboardingStep('profile');
-            } else if (!hasDashboard) {
-              setOnboardingStep('dashboard');
-            } else {
-              navigate("/", { replace: true });
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Error during auth check:", error);
-        if (error instanceof Error) {
-          setErrorMessage(error.message);
-        }
-      }
-    };
-    
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, !!session);
-      
-      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
+          console.log("Found existing session for user:", session.user.id);
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
           const hasDashboard = await checkDashboardExists(session.user.id);
           
@@ -248,24 +202,42 @@ const Auth = () => {
             navigate("/", { replace: true });
           }
         }
+      } catch (error) {
+        console.error("Error during auth check:", error);
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, !!session);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+        const hasDashboard = await checkDashboardExists(session.user.id);
+        
+        if (!hasCompletedProfile) {
+          setOnboardingStep('profile');
+        } else if (!hasDashboard) {
+          setOnboardingStep('dashboard');
+        } else {
+          navigate("/", { replace: true });
+        }
       }
       
-      if (event === "SIGNED_OUT") {
+      if (event === 'SIGNED_OUT') {
         setErrorMessage("");
         setOnboardingStep('auth');
-      }
-      
-      if (event === "USER_UPDATED") {
-        supabase.auth.getSession().then(({ error }) => {
-          if (error) {
-            setErrorMessage(getErrorMessage(error));
-          }
-        });
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, location]);
+  }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
     if (error instanceof AuthApiError) {
@@ -505,6 +477,7 @@ const Auth = () => {
                 }}
                 providers={[]}
                 view="sign_in"
+                redirectTo={window.location.origin}
                 localization={{
                   variables: {
                     sign_in: {
