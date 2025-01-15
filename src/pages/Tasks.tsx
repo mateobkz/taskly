@@ -109,7 +109,7 @@ const Tasks = () => {
             </div>
             <div className="flex gap-4">
               <Select
-                value={selectedDifficulty || ""}
+                value={selectedDifficulty || undefined}
                 onValueChange={(value) => setSelectedDifficulty(value as "Low" | "Medium" | "High" | null)}
               >
                 <SelectTrigger className="w-[180px]">
@@ -117,22 +117,22 @@ const Tasks = () => {
                   <SelectValue placeholder="Difficulty" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Difficulties</SelectItem>
+                  <SelectItem value="all">All Difficulties</SelectItem>
                   <SelectItem value="Low">Low</SelectItem>
                   <SelectItem value="Medium">Medium</SelectItem>
                   <SelectItem value="High">High</SelectItem>
                 </SelectContent>
               </Select>
               <Select
-                value={selectedStatus || ""}
-                onValueChange={(value) => setSelectedStatus(value || null)}
+                value={selectedStatus || undefined}
+                onValueChange={setSelectedStatus}
               >
                 <SelectTrigger className="w-[180px]">
                   <Filter className="h-4 w-4 mr-2" />
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="Not Started">Not Started</SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
                   <SelectItem value="Completed">Completed</SelectItem>
