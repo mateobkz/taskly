@@ -11,6 +11,13 @@ import InsightsSection from "./dashboard/InsightsSection";
 import TimeSpentChart from "./dashboard/charts/TimeSpentChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartBar, Clock } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import TaskForm from "@/components/TaskFormNew"; // Using TaskFormNew instead of TaskForm
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
