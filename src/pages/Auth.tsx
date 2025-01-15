@@ -228,6 +228,11 @@ const Auth = () => {
           }
         } catch (error) {
           console.error("Error in auth state change:", error);
+          if (error instanceof AuthApiError) {
+            setErrorMessage(getErrorMessage(error));
+          } else if (error instanceof Error) {
+            setErrorMessage(error.message);
+          }
         }
       } else if (event === 'SIGNED_OUT') {
         setErrorMessage("");
@@ -297,10 +302,6 @@ const Auth = () => {
                   }}
                   providers={[]}
                   redirectTo={`${window.location.origin}/dashboard`}
-                  onError={(error) => {
-                    console.error("Auth error occurred:", error);
-                    setErrorMessage(getErrorMessage(error));
-                  }}
                 />
               </CardContent>
             </Card>
@@ -534,10 +535,6 @@ const Auth = () => {
                 }}
                 providers={[]}
                 redirectTo={`${window.location.origin}/dashboard`}
-                onError={(error) => {
-                  console.error("Auth error occurred:", error);
-                  setErrorMessage(getErrorMessage(error));
-                }}
               />
             </CardContent>
           </Card>
