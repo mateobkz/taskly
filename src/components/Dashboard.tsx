@@ -59,7 +59,6 @@ const Dashboard = () => {
 
       if (error) throw error;
       
-      // Type assertion and validation for tasks
       const typedTasks = data?.map(task => ({
         ...task,
         priority: task.priority as Task['priority'],
@@ -67,6 +66,9 @@ const Dashboard = () => {
       })) as Task[];
       
       setTasks(typedTasks || []);
+      
+      // Update goal progress when tasks are fetched
+      updateGoalProgress(typedTasks);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
@@ -74,6 +76,67 @@ const Dashboard = () => {
         description: "Failed to fetch tasks",
         variant: "destructive",
       });
+    }
+  };
+
+  const updateGoalProgress = async (currentTasks: Task[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: currentGoals, error: goalsError } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('period', 'Weekly');
+
+      if (goalsError) throw goalsError;
+
+      for (const goal of currentGoals || []) {
+        if (new Date(goal.end_date) >= new Date()) {
+          let currentValue = 0;
+          
+          switch (goal.category) {
+            case 'tasks':
+              currentValue = currentTasks.filter(task => 
+                new Date(task.date_completed) >= new Date(goal.start_date) &&
+                new Date(task.date_completed) <= new Date(goal.end_date)
+              ).length;
+              break;
+            case 'hours':
+              currentValue = Math.floor(currentTasks.reduce((acc, task) => 
+                acc + (new Date(task.date_completed) >= new Date(goal.start_date) &&
+                      new Date(task.date_completed) <= new Date(goal.end_date) ? 
+                      task.duration_minutes : 0), 0) / 60);
+              break;
+            case 'skills':
+              const uniqueSkills = new Set(
+                currentTasks
+                  .filter(task => 
+                    new Date(task.date_completed) >= new Date(goal.start_date) &&
+                    new Date(task.date_completed) <= new Date(goal.end_date)
+                  )
+                  .flatMap(task => task.skills_acquired.split(',').map(s => s.trim()))
+              );
+              currentValue = uniqueSkills.size;
+              break;
+          }
+
+          if (currentValue !== goal.current_value) {
+            const { error: updateError } = await supabase
+              .from('goals')
+              .update({ 
+                current_value: currentValue,
+                last_updated: new Date().toISOString()
+              })
+              .eq('id', goal.id);
+
+            if (updateError) throw updateError;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error updating goal progress:", error);
     }
   };
 
@@ -90,7 +153,6 @@ const Dashboard = () => {
 
       if (error) throw error;
 
-      // Type assertion and validation for goals
       const typedGoals = data?.map(goal => ({
         ...goal,
         period: goal.period as Goal['period']
@@ -110,6 +172,45 @@ const Dashboard = () => {
   useEffect(() => {
     fetchTasks();
     fetchGoals();
+
+    // Set up real-time subscription for tasks
+    const tasksChannel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'tasks'
+        },
+        () => {
+          console.log('Tasks changed, refreshing...');
+          fetchTasks();
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscription for goals
+    const goalsChannel = supabase
+      .channel('goals-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'goals'
+        },
+        () => {
+          console.log('Goals changed, refreshing...');
+          fetchGoals();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(tasksChannel);
+      supabase.removeChannel(goalsChannel);
+    };
   }, [searchQuery, selectedDifficulty]);
 
   const handleDeleteTask = async (taskId: number) => {

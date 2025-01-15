@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      badges: {
+        Row: {
+          category: string
+          description: string
+          earned_at: string
+          icon: string | null
+          id: number
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          description: string
+          earned_at?: string
+          icon?: string | null
+          id?: number
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          description?: string
+          earned_at?: string
+          icon?: string | null
+          id?: number
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "badges_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string | null
@@ -51,7 +89,9 @@ export type Database = {
           current_value: number | null
           end_date: string
           id: number
+          last_updated: string | null
           period: string
+          progress_data: Json | null
           start_date: string
           target_value: number
           title: string
@@ -64,7 +104,9 @@ export type Database = {
           current_value?: number | null
           end_date: string
           id?: number
+          last_updated?: string | null
           period: string
+          progress_data?: Json | null
           start_date?: string
           target_value: number
           title: string
@@ -77,7 +119,9 @@ export type Database = {
           current_value?: number | null
           end_date?: string
           id?: number
+          last_updated?: string | null
           period?: string
+          progress_data?: Json | null
           start_date?: string
           target_value?: number
           title?: string
@@ -87,6 +131,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: number
+          is_read: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          is_read?: boolean | null
+          message: string
+          title: string
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          is_read?: boolean | null
+          message?: string
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -152,8 +234,11 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes: number
           id: number
+          is_recurring: boolean | null
           key_insights: string | null
           priority: string | null
+          recurrence_end_date: string | null
+          recurrence_frequency: string | null
           skills_acquired: string
           status: string | null
           title: string
@@ -169,8 +254,11 @@ export type Database = {
           difficulty: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
           id?: number
+          is_recurring?: boolean | null
           key_insights?: string | null
           priority?: string | null
+          recurrence_end_date?: string | null
+          recurrence_frequency?: string | null
           skills_acquired: string
           status?: string | null
           title: string
@@ -186,8 +274,11 @@ export type Database = {
           difficulty?: Database["public"]["Enums"]["difficulty_level"]
           duration_minutes?: number
           id?: number
+          is_recurring?: boolean | null
           key_insights?: string | null
           priority?: string | null
+          recurrence_end_date?: string | null
+          recurrence_frequency?: string | null
           skills_acquired?: string
           status?: string | null
           title?: string
@@ -213,6 +304,8 @@ export type Database = {
     }
     Enums: {
       difficulty_level: "Low" | "Medium" | "High"
+      task_priority: "Low" | "Medium" | "High"
+      task_status: "Not Started" | "In Progress" | "Completed"
     }
     CompositeTypes: {
       [_ in never]: never
