@@ -69,7 +69,15 @@ const Dashboard = () => {
       const { data, error } = await query;
 
       if (error) throw error;
-      setTasks(data || []);
+      
+      // Type assertion and validation for tasks
+      const typedTasks = data?.map(task => ({
+        ...task,
+        priority: task.priority as Task['priority'],
+        status: task.status as Task['status']
+      })) as Task[];
+      
+      setTasks(typedTasks || []);
     } catch (error) {
       console.error("Error fetching tasks:", error);
       toast({
@@ -92,7 +100,14 @@ const Dashboard = () => {
         .eq('user_id', user.id);
 
       if (error) throw error;
-      setGoals(data || []);
+
+      // Type assertion and validation for goals
+      const typedGoals = data?.map(goal => ({
+        ...goal,
+        period: goal.period as Goal['period']
+      })) as Goal[];
+
+      setGoals(typedGoals || []);
     } catch (error) {
       console.error("Error fetching goals:", error);
       toast({

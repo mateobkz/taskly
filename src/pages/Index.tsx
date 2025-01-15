@@ -10,6 +10,7 @@ import FeedbackButton from "@/components/feedback/FeedbackButton";
 import Profile from "./Profile";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Task } from "@/types/task";
 
 const Index = () => {
   const { toast } = useToast();
@@ -27,7 +28,15 @@ const Index = () => {
         .order('date_completed', { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Type assertion and validation for tasks
+      const typedTasks = data?.map(task => ({
+        ...task,
+        priority: task.priority as Task['priority'],
+        status: task.status as Task['status']
+      })) as Task[];
+
+      return typedTasks;
     },
   });
 

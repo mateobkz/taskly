@@ -7,8 +7,11 @@ export type Task = {
   skills_acquired: string;
   difficulty: 'Low' | 'Medium' | 'High';
   description: string;
-  key_insights: string;
+  key_insights: string | null;
   duration_minutes: number;
-  priority?: 'Low' | 'Medium' | 'High';
-  status?: 'Not Started' | 'In Progress' | 'Completed';
+  priority: 'Low' | 'Medium' | 'High' | null;
+  status: 'Not Started' | 'In Progress' | 'Completed' | null;
+  created_at: string;
+  updated_at: string;
+  user_id: string | null;
 };
