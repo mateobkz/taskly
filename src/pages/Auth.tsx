@@ -108,7 +108,10 @@ const Auth = () => {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        setErrorMessage("User not found");
+        return;
+      }
 
       let logoUrl = dashboardData.logo_url;
       if (logoFile) {
@@ -127,6 +130,14 @@ const Auth = () => {
         }
       }
 
+      console.log("Creating dashboard with data:", {
+        user_id: user.id,
+        name: dashboardData.name,
+        company_name: dashboardData.company_name,
+        position: dashboardData.position,
+        logo_url: logoUrl,
+      });
+
       const { error: dashboardError } = await supabase
         .from('dashboards')
         .insert({
@@ -137,12 +148,25 @@ const Auth = () => {
           logo_url: logoUrl,
         });
 
-      if (dashboardError) throw dashboardError;
+      if (dashboardError) {
+        console.error("Dashboard creation error:", dashboardError);
+        throw dashboardError;
+      }
       
+      toast({
+        title: "Success",
+        description: "Dashboard created successfully",
+      });
+
       navigate("/", { replace: true });
     } catch (error) {
       console.error("Error creating dashboard:", error);
       setErrorMessage("Failed to create dashboard. Please try again.");
+      toast({
+        title: "Error",
+        description: "Failed to create dashboard",
+        variant: "destructive",
+      });
     }
   };
 
