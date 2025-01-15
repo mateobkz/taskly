@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Task } from '@/types/task';
-import { format, isSameDay, differenceInDays } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
@@ -118,7 +118,7 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-[1fr,300px] gap-6">
-        <Card className="p-4 bg-white/50 backdrop-blur-sm border-0 shadow-lg">
+        <Card className="p-4 bg-white/50 backdrop-blur-sm border border-gray-100 shadow-md">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2">
               <CalendarRange className="h-5 w-5 text-blue-500" />
@@ -149,54 +149,63 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
 
             <DragDropContext onDragEnd={handleDragEnd}>
               <div className="grid grid-cols-1 md:grid-cols-[300px,1fr] gap-4">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-2xl border-0 shadow-md bg-white/90 backdrop-blur-sm hover:shadow-lg transition-shadow p-4"
-                  classNames={{
-                    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
-                    month: "space-y-4",
-                    caption: "flex justify-center pt-1 relative items-center",
-                    caption_label: "text-lg font-medium text-gray-800",
-                    nav: "space-x-1 flex items-center",
-                    nav_button: cn(
-                      "h-9 w-9 bg-transparent p-0 opacity-75 hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
-                    ),
-                    nav_button_previous: "absolute left-1",
-                    nav_button_next: "absolute right-1",
-                    table: "w-full border-collapse space-y-1",
-                    head_row: "flex",
-                    head_cell: "text-gray-500 rounded-md w-10 font-normal text-[0.9rem] mb-2",
-                    row: "flex w-full mt-2",
-                    cell: cn(
-                      "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-blue-50 rounded-full",
-                      "[&:has([aria-selected].day-range-end)]:rounded-r-md",
-                      "[&:has([aria-selected].day-outside)]:bg-gray-50/50",
-                      "[&:has([aria-selected])]:bg-gray-50",
-                      "first:[&:has([aria-selected])]:rounded-l-md",
-                      "last:[&:has([aria-selected])]:rounded-r-md",
-                    ),
-                    day: cn(
-                      "h-10 w-10 p-0 font-normal rounded-full transition-colors hover:bg-blue-50 aria-selected:opacity-100",
-                    ),
-                    day_range_end: "day-range-end",
-                    day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white",
-                    day_today: "bg-gray-100 text-gray-900",
-                    day_outside: "text-gray-400 opacity-50",
-                    day_disabled: "text-gray-400 opacity-50",
-                    day_hidden: "invisible",
-                  }}
-                  components={{
-                    DayContent: ({ date }) => getDayContent(date),
-                  }}
-                />
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="w-full"
+                    classNames={{
+                      months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                      month: "space-y-4 w-full",
+                      caption: "flex justify-center pt-1 relative items-center mb-4",
+                      caption_label: "text-lg font-medium text-gray-800",
+                      nav: "space-x-1 flex items-center",
+                      nav_button: cn(
+                        "h-9 w-9 bg-transparent p-0 opacity-75 hover:opacity-100 transition-opacity rounded-full hover:bg-gray-100"
+                      ),
+                      nav_button_previous: "absolute left-1",
+                      nav_button_next: "absolute right-1",
+                      table: "w-full border-collapse space-y-1",
+                      head_row: "flex w-full",
+                      head_cell: "text-gray-500 rounded-md w-10 font-normal text-[0.9rem] mb-2",
+                      row: "flex w-full mt-2",
+                      cell: cn(
+                        "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-blue-50 w-10 h-10 rounded-full",
+                        "[&:has([aria-selected].day-range-end)]:rounded-r-md",
+                        "[&:has([aria-selected].day-outside)]:bg-gray-50/50",
+                        "[&:has([aria-selected])]:bg-gray-50",
+                        "first:[&:has([aria-selected])]:rounded-l-md",
+                        "last:[&:has([aria-selected])]:rounded-r-md",
+                      ),
+                      day: cn(
+                        "h-10 w-10 p-0 font-normal rounded-full transition-colors hover:bg-blue-50 aria-selected:opacity-100",
+                      ),
+                      day_range_end: "day-range-end",
+                      day_selected: "bg-blue-500 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-500 focus:text-white",
+                      day_today: "bg-gray-100 text-gray-900",
+                      day_outside: "text-gray-400 opacity-50",
+                      day_disabled: "text-gray-400 opacity-50",
+                      day_hidden: "invisible",
+                    }}
+                    components={{
+                      DayContent: ({ date }) => (
+                        <div className="relative w-full h-full flex items-center justify-center">
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            {format(date, 'd')}
+                          </span>
+                          {getDayContent(date)}
+                        </div>
+                      ),
+                    }}
+                  />
+                </div>
                 
                 {selectedDate && (
                   <Droppable droppableId={format(selectedDate, 'yyyy-MM-dd')}>
                     {(provided) => (
                       <Card 
-                        className="h-fit bg-white/90 backdrop-blur-sm border-0 shadow-md hover:shadow-lg transition-all rounded-2xl" 
+                        className="h-fit bg-white border border-gray-100 shadow-sm hover:shadow-md transition-all rounded-xl" 
                         ref={provided.innerRef} 
                         {...provided.droppableProps}
                       >
