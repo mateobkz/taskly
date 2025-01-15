@@ -22,6 +22,7 @@ const Auth = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth');
   const [isLoading, setIsLoading] = useState(false);
+  
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -301,7 +302,7 @@ const Auth = () => {
                     },
                   }}
                   providers={[]}
-                  redirectTo={`${window.location.origin}/dashboard`}
+                  redirectTo={window.location.origin}
                 />
               </CardContent>
             </Card>
@@ -494,54 +495,6 @@ const Auth = () => {
       </DashboardProvider>
     );
   }
-
-  return (
-    <DashboardProvider>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-        <Header />
-        <div className="container flex items-center justify-center min-h-screen py-20 px-4">
-          <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
-            <CardHeader>
-              <CardTitle className="text-center text-2xl font-bold text-primary">
-                Welcome Back
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {errorMessage && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertDescription>{errorMessage}</AlertDescription>
-                </Alert>
-              )}
-              <SupabaseAuth 
-                supabaseClient={supabase}
-                appearance={{
-                  theme: ThemeSupa,
-                  variables: {
-                    default: {
-                      colors: {
-                        brand: '#3B82F6',
-                        brandAccent: '#2563EB',
-                      },
-                    },
-                  },
-                  className: {
-                    container: 'animate-fade-in',
-                    button: 'bg-blue-500 hover:bg-blue-600',
-                    label: 'text-sm font-medium text-gray-700',
-                    input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
-                    message: 'text-sm text-red-600',
-                    anchor: 'text-sm text-blue-500 hover:text-blue-600',
-                  },
-                }}
-                providers={[]}
-                redirectTo={`${window.location.origin}/dashboard`}
-              />
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </DashboardProvider>
-  );
 };
 
 export default Auth;
