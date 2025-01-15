@@ -47,6 +47,38 @@ export type Database = {
           },
         ]
       }
+      dashboards: {
+        Row: {
+          created_at: string | null
+          id: number
+          name: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: number
+          name: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: number
+          name?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dashboards_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string | null
@@ -227,6 +259,7 @@ export type Database = {
       tasks: {
         Row: {
           created_at: string
+          dashboard_id: number | null
           date_completed: string
           date_ended: string
           date_started: string
@@ -247,6 +280,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          dashboard_id?: number | null
           date_completed: string
           date_ended?: string
           date_started?: string
@@ -267,6 +301,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          dashboard_id?: number | null
           date_completed?: string
           date_ended?: string
           date_started?: string
@@ -286,6 +321,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "dashboards"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_user_id_fkey"
             columns: ["user_id"]

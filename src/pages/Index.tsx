@@ -12,6 +12,7 @@ import Tasks from "./Tasks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task";
+import { DashboardProvider } from "@/contexts/DashboardContext";
 
 const Index = () => {
   const { toast } = useToast();
@@ -49,7 +50,7 @@ const Index = () => {
   };
 
   return (
-    <>
+    <DashboardProvider>
       <Header />
       <div className="container py-20">
         <Tabs defaultValue="dashboard" className="space-y-6">
@@ -112,7 +113,7 @@ const Index = () => {
         <QuickAddTask onTaskAdded={handleTaskAdded} />
         <FeedbackButton />
       </div>
-    </>
+    </DashboardProvider>
   );
 };
 
