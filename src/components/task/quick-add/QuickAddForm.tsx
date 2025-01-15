@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,6 +34,20 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
     duration_minutes: 30,
     status: "Not Started" as "Not Started" | "In Progress" | "Completed"
   });
+
+  useEffect(() => {
+    const handleVoiceTranscription = (event: CustomEvent<{ text: string }>) => {
+      setNlpInput(event.detail.text);
+      if (showPreview) setShowPreview(false);
+      if (clarificationNeeded) setClarificationNeeded(false);
+    };
+
+    window.addEventListener('voiceTranscription', handleVoiceTranscription as EventListener);
+
+    return () => {
+      window.removeEventListener('voiceTranscription', handleVoiceTranscription as EventListener);
+    };
+  }, []);
 
   const handleNLPProcess = async (userResponse?: string) => {
     if (!nlpInput.trim() && !userResponse) {
