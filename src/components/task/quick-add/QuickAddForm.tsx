@@ -21,6 +21,7 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
   const [clarificationQuestion, setClarificationQuestion] = useState("");
   const [clarificationReasoning, setClarificationReasoning] = useState("");
   const [clarificationResponse, setClarificationResponse] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<"Not Started" | "In Progress" | "Completed">("Not Started");
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -31,6 +32,7 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
     difficulty: "",
     key_insights: "",
     duration_minutes: 30,
+    status: "Not Started" as "Not Started" | "In Progress" | "Completed"
   });
 
   const handleNLPProcess = async (userResponse?: string) => {
@@ -68,6 +70,7 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
         setFormData(prev => ({
           ...prev,
           ...parsedTask,
+          status: selectedStatus
         }));
         setClarificationNeeded(false);
         setShowPreview(true);
@@ -117,6 +120,26 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
           )}
           <span className="ml-2">Process</span>
         </Button>
+      </div>
+
+      <div className="flex gap-2 justify-center">
+        {["Not Started", "In Progress", "Completed"].map((status) => (
+          <Button
+            key={status}
+            variant={selectedStatus === status ? "default" : "outline"}
+            onClick={() => {
+              setSelectedStatus(status as typeof selectedStatus);
+              setFormData(prev => ({ ...prev, status: status as typeof selectedStatus }));
+            }}
+            className={`flex-1 ${
+              selectedStatus === status 
+                ? "bg-blue-500 hover:bg-blue-600 text-white" 
+                : "hover:bg-blue-50"
+            }`}
+          >
+            {status}
+          </Button>
+        ))}
       </div>
 
       <QuickAddPrompts />

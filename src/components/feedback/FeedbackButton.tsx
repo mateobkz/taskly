@@ -76,9 +76,10 @@ const FeedbackButton = () => {
     <>
       <Button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-6 rounded-full w-12 h-12 p-0 bg-primary hover:bg-primary/90 shadow-lg animate-fade-in"
+        className="fixed bottom-24 right-6 rounded-full h-14 px-6 bg-blue-500 hover:bg-blue-600 text-white shadow-lg animate-fade-in group transition-all duration-300 hover:scale-105"
       >
-        <MessageSquare className="h-5 w-5" />
+        <MessageSquare className="h-5 w-5 mr-2 group-hover:rotate-12 transition-transform duration-300" />
+        <span className="font-medium">Feedback</span>
       </Button>
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -124,6 +125,7 @@ const FeedbackButton = () => {
               <Button
                 onClick={handleSubmit}
                 disabled={isSubmitting}
+                className="bg-blue-500 hover:bg-blue-600"
               >
                 Submit Feedback
               </Button>
