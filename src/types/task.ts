@@ -7,7 +7,6 @@ export type Task = {
   skills_acquired: string;
   difficulty: 'Low' | 'Medium' | 'High';
   description: string;
-  key_challenges: string;
-  key_takeaways: string;
+  key_insights: string;
   duration_minutes: number;
 };

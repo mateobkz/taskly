@@ -1,7 +1,6 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import {
   Dialog,
   DialogContent,
@@ -17,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Wand2, X, Check, Loader2, MessageCircle } from "lucide-react"
+import { Plus, Wand2, X, Check, Loader2, MessageCircle, Info } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/integrations/supabase/types"
@@ -25,6 +24,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card } from "@/components/ui/card"
 import { motion, AnimatePresence } from "framer-motion"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"]
 
@@ -43,6 +43,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const [clarificationResponse, setClarificationResponse] = useState("")
   const [processingNLP, setProcessingNLP] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     difficulty: "" as DifficultyLevel,
@@ -51,10 +52,17 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     date_completed: new Date().toISOString().split('T')[0],
     description: "",
     skills_acquired: "",
-    key_challenges: "",
-    key_takeaways: "",
+    key_insights: "",
     duration_minutes: 30,
   })
+
+  const inputPrompts = [
+    "📅 Include dates: when did you start/finish?",
+    "⏱️ Mention duration in minutes",
+    "📊 How difficult was it? (Low/Medium/High)",
+    "🎯 What skills did you use or learn?",
+    "💡 Share challenges faced and key learnings"
+  ]
 
   const handleNLPProcess = async (userResponse?: string) => {
     if (!nlpInput.trim() && !userResponse) {
@@ -148,10 +156,9 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
         date_started: new Date().toISOString().split('T')[0],
         date_ended: new Date().toISOString().split('T')[0],
         date_completed: new Date().toISOString().split('T')[0],
-        description: "Quick task entry",
+        description: "",
         skills_acquired: "",
-        key_challenges: "Added via quick entry",
-        key_takeaways: "Added via quick entry",
+        key_insights: "",
         duration_minutes: 30,
       })
       setNlpInput("")
@@ -201,7 +208,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           <div className="relative">
             <Textarea
               value={nlpInput}
@@ -210,7 +217,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
                 if (showPreview) setShowPreview(false)
                 if (clarificationNeeded) setClarificationNeeded(false)
               }}
-              placeholder="Describe your task naturally, e.g.: Complete the marketing report by Jan 20, 2025, difficulty medium, skills: Excel, analysis"
+              placeholder="Describe your task naturally..."
               className="min-h-[100px] pr-[100px] resize-none bg-gray-50/50 focus:bg-white transition-colors"
             />
             <Button
@@ -226,6 +233,15 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
               )}
               <span className="ml-2">Process</span>
             </Button>
+          </div>
+
+          <div className="space-y-2">
+            {inputPrompts.map((prompt, index) => (
+              <div key={index} className="text-sm text-gray-500 flex items-center gap-2">
+                <Info className="w-4 h-4" />
+                {prompt}
+              </div>
+            ))}
           </div>
 
           <AnimatePresence>
@@ -274,101 +290,132 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
                 transition={{ duration: 0.2 }}
               >
                 <Card className="p-4 space-y-4 bg-white/50 backdrop-blur-sm">
-                  <h3 className="font-medium text-sm text-gray-500">Preview</h3>
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium text-sm text-gray-500">Preview</h3>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsEditing(!isEditing)}
+                        className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                      >
+                        Modify
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="bg-green-600 hover:bg-green-700 text-white"
+                      >
+                        {loading ? (
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                        ) : null}
+                        Validate
+                      </Button>
+                    </div>
+                  </div>
                   
                   <div className="space-y-4">
-                    <div>
-                      <Label>Title</Label>
-                      <Input
-                        value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Description</Label>
-                      <Textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label>Difficulty</Label>
-                      <Select
-                        value={formData.difficulty}
-                        onValueChange={(value: DifficultyLevel) => 
-                          setFormData({ ...formData, difficulty: value })}
-                      >
-                        <SelectTrigger className="mt-1">
-                          <SelectValue placeholder="Select difficulty" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Low">Low</SelectItem>
-                          <SelectItem value="Medium">Medium</SelectItem>
-                          <SelectItem value="High">High</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label>Skills</Label>
-                      <Input
-                        value={formData.skills_acquired}
-                        onChange={(e) => setFormData({ ...formData, skills_acquired: e.target.value })}
-                        placeholder="e.g., Python, React, SQL"
-                        className="mt-1"
-                      />
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Start Date</Label>
-                        <Input
-                          type="date"
-                          value={formData.date_started}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            date_started: e.target.value,
-                          })}
-                          className="mt-1"
+                    {isEditing ? (
+                      <>
+                        <div>
+                          <Input
+                            value={formData.title}
+                            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                            placeholder="Task title"
+                            className="font-medium"
+                          />
+                        </div>
+                        
+                        <Textarea
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          placeholder="Task description"
+                          className="resize-none"
                         />
-                      </div>
-                      
-                      <div>
-                        <Label>End Date</Label>
+                        
+                        <div className="grid grid-cols-2 gap-4">
+                          <Input
+                            type="date"
+                            value={formData.date_started}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              date_started: e.target.value,
+                            })}
+                          />
+                          <Input
+                            type="date"
+                            value={formData.date_ended}
+                            onChange={(e) => setFormData({ 
+                              ...formData, 
+                              date_ended: e.target.value,
+                              date_completed: e.target.value,
+                            })}
+                          />
+                        </div>
+
+                        <Select
+                          value={formData.difficulty}
+                          onValueChange={(value: DifficultyLevel) => 
+                            setFormData({ ...formData, difficulty: value })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select difficulty" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Low">Low</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="High">High</SelectItem>
+                          </SelectContent>
+                        </Select>
+
                         <Input
-                          type="date"
-                          value={formData.date_ended}
-                          onChange={(e) => setFormData({ 
-                            ...formData, 
-                            date_ended: e.target.value,
-                            date_completed: e.target.value,
-                          })}
-                          className="mt-1"
+                          value={formData.skills_acquired}
+                          onChange={(e) => setFormData({ ...formData, skills_acquired: e.target.value })}
+                          placeholder="Skills acquired (comma-separated)"
                         />
+
+                        <Textarea
+                          value={formData.key_insights}
+                          onChange={(e) => setFormData({ ...formData, key_insights: e.target.value })}
+                          placeholder="Key insights (challenges and takeaways)"
+                          className="resize-none"
+                        />
+                      </>
+                    ) : (
+                      <div className="space-y-4">
+                        <h4 className="font-medium">{formData.title}</h4>
+                        <p className="text-sm text-gray-600">{formData.description}</p>
+                        <div className="flex gap-2 text-sm text-gray-500">
+                          <span>{new Date(formData.date_started).toLocaleDateString()}</span>
+                          <span>→</span>
+                          <span>{new Date(formData.date_ended).toLocaleDateString()}</span>
+                        </div>
+                        <div className="flex gap-2">
+                          {formData.skills_acquired.split(',').map((skill, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-sm"
+                            >
+                              {skill.trim()}
+                            </span>
+                          ))}
+                        </div>
+                        <div className="text-sm">
+                          <span className={`px-2 py-1 rounded-md ${
+                            formData.difficulty === 'Low' ? 'bg-green-50 text-green-700' :
+                            formData.difficulty === 'Medium' ? 'bg-yellow-50 text-yellow-700' :
+                            'bg-red-50 text-red-700'
+                          }`}>
+                            {formData.difficulty}
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          <strong>Key Insights:</strong>
+                          <p>{formData.key_insights}</p>
+                        </div>
                       </div>
-                    </div>
-
-                    <div>
-                      <Label>Key Challenges</Label>
-                      <Textarea
-                        value={formData.key_challenges}
-                        onChange={(e) => setFormData({ ...formData, key_challenges: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Key Takeaways</Label>
-                      <Textarea
-                        value={formData.key_takeaways}
-                        onChange={(e) => setFormData({ ...formData, key_takeaways: e.target.value })}
-                        className="mt-1"
-                      />
-                    </div>
+                    )}
                   </div>
                 </Card>
               </motion.div>
@@ -390,13 +437,6 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
             <X className="w-4 h-4 mr-2" />
             Cancel
           </Button>
-          
-          {showPreview && (
-            <Button onClick={handleSubmit} disabled={loading}>
-              <Check className="w-4 h-4 mr-2" />
-              {loading ? "Adding..." : "Add Task"}
-            </Button>
-          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

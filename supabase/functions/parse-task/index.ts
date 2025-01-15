@@ -70,8 +70,8 @@ serve(async (req) => {
           "date_ended": "YYYY-MM-DD",
           "difficulty": "Low/Medium/High",
           "skills_acquired": "Comma-separated list",
-          "key_challenges": "Main challenges faced",
-          "key_takeaways": "Key learnings and insights"
+          "key_insights": "Combined challenges and takeaways in a clear format",
+          "duration_minutes": 30
         }
       }
 
