@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Task } from '@/types/task';
-import { format, isSameDay } from 'date-fns';
+import { format, isSameDay, differenceInDays } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
