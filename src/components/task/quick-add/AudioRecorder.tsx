@@ -26,10 +26,13 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
       audioChunksRef.current = [];
       setHasRecording(false);
 
+      // Request microphone access with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
           sampleRate: 44100
         } 
       });
@@ -55,23 +58,24 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
           audioRef.current.src = URL.createObjectURL(audioBlob);
         }
         setHasRecording(true);
-      };
+        setIsRecording(false);
 
-      recorder.onerror = (event) => {
-        console.error('MediaRecorder error:', event);
-        toast({
-          title: "Recording Error",
-          description: "An error occurred while recording. Please try again.",
-          variant: "destructive",
-        });
-        stopRecording();
+        // Clean up the stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => {
+            track.stop();
+            console.log('Audio track stopped');
+          });
+          streamRef.current = null;
+        }
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start();
+      recorder.start(100); // Collect data every 100ms
       setIsRecording(true);
       console.log('Recording started');
 
+      // Set 30-second timeout
       recordingTimeoutRef.current = window.setTimeout(() => {
         if (isRecording) {
           console.log('Auto-stopping recording after 30 seconds');
@@ -106,17 +110,7 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       console.log('MediaRecorder stopped');
-      
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => {
-          track.stop();
-          console.log('Audio track stopped');
-        });
-        streamRef.current = null;
-      }
     }
-    
-    setIsRecording(false);
   };
 
   const processAudio = async () => {
@@ -187,7 +181,11 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
 
   return (
     <div className="flex items-center gap-2">
-      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} className="hidden" />
+      <audio 
+        ref={audioRef} 
+        onEnded={() => setIsPlaying(false)} 
+        className="hidden"
+      />
       
       {!hasRecording ? (
         <Button
