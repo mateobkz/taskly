@@ -60,7 +60,7 @@ const Profile = () => {
         setProfile({
           ...data,
           skills: data.skills || [],
-          social_links: data.social_links || {},
+          social_links: (data.social_links as SocialLinks) || {},
         });
       }
     } catch (error) {

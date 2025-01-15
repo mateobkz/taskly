@@ -6,13 +6,6 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface SocialLinks {
-  linkedin?: string;
-  github?: string;
-  twitter?: string;
-  [key: string]: string | undefined;
-}
-
 export type Database = {
   public: {
     Tables: {
