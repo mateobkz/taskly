@@ -2,7 +2,6 @@ import React from "react";
 import { useAudioRecorder } from "./audio/useAudioRecorder";
 import RecordingControls from "./audio/RecordingControls";
 import PlaybackControls from "./audio/PlaybackControls";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AudioRecorderProps {
   onTranscriptionComplete: (text: string) => void;
@@ -20,6 +19,7 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
     togglePlayback,
     resetRecording,
     processAudio,
+    setIsPlaying
   } = useAudioRecorder(onTranscriptionComplete);
 
   return (

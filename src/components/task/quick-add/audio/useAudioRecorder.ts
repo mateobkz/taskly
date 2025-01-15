@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export const useAudioRecorder = (onTranscriptionComplete: (text: string) => void) => {
   const [isRecording, setIsRecording] = useState(false);
@@ -178,6 +179,7 @@ export const useAudioRecorder = (onTranscriptionComplete: (text: string) => void
     isProcessing,
     hasRecording,
     isPlaying,
+    setIsPlaying,
     audioRef,
     startRecording,
     stopRecording,
