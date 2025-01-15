@@ -39,6 +39,87 @@ const Auth = () => {
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
+  const getErrorMessage = (error: AuthError) => {
+    console.error("Auth error:", error);
+    if (error instanceof AuthApiError) {
+      switch (error.message) {
+        case "Invalid login credentials":
+          return "Invalid email or password. Please check your credentials and try again.";
+        case "Email not confirmed":
+          return "Please verify your email address before signing in.";
+        case "Invalid email or password":
+          return "The email or password you entered is incorrect. Please try again.";
+        default:
+          return error.message;
+      }
+    }
+    return "An unexpected error occurred. Please try again.";
+  };
+
+  useEffect(() => {
+    console.log("Auth component mounted");
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Current session:", session);
+        
+        if (session?.user) {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
+          if (!hasCompletedProfile) {
+            setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
+          } else {
+            navigate("/", { replace: true });
+          }
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        }
+      }
+    };
+    
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.id);
+      
+      if (event === 'SIGNED_IN' && session?.user) {
+        try {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
+          if (!hasCompletedProfile) {
+            setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
+          } else {
+            navigate("/", { replace: true });
+          }
+        } catch (error) {
+          console.error("Error in auth state change:", error);
+          if (error instanceof AuthApiError) {
+            setErrorMessage(getErrorMessage(error));
+          } else if (error instanceof Error) {
+            setErrorMessage(error.message);
+          }
+        }
+      } else if (event === 'SIGNED_OUT') {
+        setErrorMessage("");
+        setOnboardingStep('auth');
+      }
+    });
+
+    return () => {
+      console.log("Cleaning up auth subscriptions");
+      subscription.unsubscribe();
+    };
+  }, [navigate]);
+
   const checkProfileCompletion = async (userId: string) => {
     console.log("Checking profile completion for user:", userId);
     try {
@@ -183,85 +264,6 @@ const Auth = () => {
     }
   };
 
-  useEffect(() => {
-    console.log("Auth component mounted");
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        console.log("Current session:", session);
-        
-        if (session?.user) {
-          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-          const hasDashboard = await checkDashboardExists(session.user.id);
-          
-          if (!hasCompletedProfile) {
-            setOnboardingStep('profile');
-          } else if (!hasDashboard) {
-            setOnboardingStep('dashboard');
-          } else {
-            navigate("/", { replace: true });
-          }
-        }
-      } catch (error) {
-        console.error("Error checking auth:", error);
-        if (error instanceof Error) {
-          setErrorMessage(error.message);
-        }
-      }
-    };
-    
-    checkAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        try {
-          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-          const hasDashboard = await checkDashboardExists(session.user.id);
-          
-          if (!hasCompletedProfile) {
-            setOnboardingStep('profile');
-          } else if (!hasDashboard) {
-            setOnboardingStep('dashboard');
-          } else {
-            navigate("/", { replace: true });
-          }
-        } catch (error) {
-          console.error("Error in auth state change:", error);
-          if (error instanceof AuthApiError) {
-            setErrorMessage(getErrorMessage(error));
-          } else if (error instanceof Error) {
-            setErrorMessage(error.message);
-          }
-        }
-      } else if (event === 'SIGNED_OUT') {
-        setErrorMessage("");
-        setOnboardingStep('auth');
-      }
-    });
-
-    return () => {
-      console.log("Cleaning up auth subscriptions");
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const getErrorMessage = (error: AuthError) => {
-    console.error("Auth error:", error);
-    if (error instanceof AuthApiError) {
-      switch (error.message) {
-        case "Invalid login credentials":
-          return "Invalid email or password. Please check your credentials and try again.";
-        case "Email not confirmed":
-          return "Please verify your email address before signing in.";
-        default:
-          return error.message;
-      }
-    }
-    return error.message;
-  };
-
   if (onboardingStep === 'auth') {
     return (
       <DashboardProvider>
@@ -302,7 +304,6 @@ const Auth = () => {
                     },
                   }}
                   providers={[]}
-                  redirectTo={window.location.origin}
                 />
               </CardContent>
             </Card>
