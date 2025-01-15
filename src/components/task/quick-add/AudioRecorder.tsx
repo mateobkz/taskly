@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Mic, MicOff, Play, RotateCcw, Send } from "lucide-react";
+import { Loader2, Mic, MicOff, Play, Pause, RotateCcw, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -22,28 +22,20 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
 
   const startRecording = async () => {
     try {
-      // Reset audio chunks
+      // Reset state
       audioChunksRef.current = [];
       setHasRecording(false);
 
-      // Request microphone access with specific constraints
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 44100
-        } 
+        audio: true
       });
       
       streamRef.current = stream;
       console.log('Microphone access granted, stream created');
 
-      const recorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-
+      const recorder = new MediaRecorder(stream);
+      
       recorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
           console.log('Received audio chunk of size:', event.data.size);
@@ -59,19 +51,20 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
         }
         setHasRecording(true);
         setIsRecording(false);
+      };
 
-        // Clean up the stream
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => {
-            track.stop();
-            console.log('Audio track stopped');
-          });
-          streamRef.current = null;
-        }
+      recorder.onerror = (event) => {
+        console.error('MediaRecorder error:', event);
+        toast({
+          title: "Recording Error",
+          description: "An error occurred while recording. Please try again.",
+          variant: "destructive",
+        });
+        stopRecording();
       };
 
       mediaRecorderRef.current = recorder;
-      recorder.start(100); // Collect data every 100ms
+      recorder.start();
       setIsRecording(true);
       console.log('Recording started');
 
@@ -80,6 +73,10 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
         if (isRecording) {
           console.log('Auto-stopping recording after 30 seconds');
           stopRecording();
+          toast({
+            title: "Recording Complete",
+            description: "Maximum recording duration reached (30 seconds)",
+          });
         }
       }, 30000);
 
@@ -100,8 +97,6 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
   };
 
   const stopRecording = () => {
-    console.log('Stopping recording...');
-    
     if (recordingTimeoutRef.current) {
       clearTimeout(recordingTimeoutRef.current);
       recordingTimeoutRef.current = null;
@@ -111,6 +106,36 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
       mediaRecorderRef.current.stop();
       console.log('MediaRecorder stopped');
     }
+
+    // Clean up the stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => {
+        track.stop();
+        console.log('Audio track stopped');
+      });
+      streamRef.current = null;
+    }
+  };
+
+  const togglePlayback = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+      } else {
+        audioRef.current.play();
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const resetRecording = () => {
+    if (audioRef.current) {
+      audioRef.current.src = '';
+    }
+    setHasRecording(false);
+    setIsPlaying(false);
+    audioChunksRef.current = [];
   };
 
   const processAudio = async () => {
@@ -141,6 +166,7 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
               title: "Success",
               description: "Voice input processed successfully!",
             });
+            resetRecording(); // Reset after successful processing
           }
         }
       };
@@ -158,27 +184,6 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
     }
   };
 
-  const playRecording = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-        audioRef.current.currentTime = 0;
-      } else {
-        audioRef.current.play();
-      }
-      setIsPlaying(!isPlaying);
-    }
-  };
-
-  const resetRecording = () => {
-    if (audioRef.current) {
-      audioRef.current.src = '';
-    }
-    setHasRecording(false);
-    setIsPlaying(false);
-    audioChunksRef.current = [];
-  };
-
   return (
     <div className="flex items-center gap-2">
       <audio 
@@ -189,11 +194,11 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
       
       {!hasRecording ? (
         <Button
-          variant="outline"
+          variant={isRecording ? "destructive" : "outline"}
           size="icon"
-          className={isRecording ? 'bg-red-100 text-red-600 hover:bg-red-200 animate-pulse' : ''}
           onClick={isRecording ? stopRecording : startRecording}
           disabled={isProcessing}
+          className={isRecording ? "animate-pulse" : ""}
         >
           {isProcessing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -208,10 +213,14 @@ const AudioRecorder = ({ onTranscriptionComplete }: AudioRecorderProps) => {
           <Button
             variant="outline"
             size="icon"
-            onClick={playRecording}
+            onClick={togglePlayback}
             disabled={isProcessing}
           >
-            <Play className="h-4 w-4" />
+            {isPlaying ? (
+              <Pause className="h-4 w-4" />
+            ) : (
+              <Play className="h-4 w-4" />
+            )}
           </Button>
           
           <Button
