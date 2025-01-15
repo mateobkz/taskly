@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +18,6 @@ type OnboardingStep = 'auth' | 'profile' | 'dashboard';
 
 const Auth = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { toast } = useToast();
   const [errorMessage, setErrorMessage] = useState("");
   const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth');
@@ -184,13 +183,13 @@ const Auth = () => {
   };
 
   useEffect(() => {
+    console.log("Auth component mounted");
     const checkAuth = async () => {
-      setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
+        console.log("Current session:", session);
         
         if (session?.user) {
-          console.log("Found existing session for user:", session.user.id);
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
           const hasDashboard = await checkDashboardExists(session.user.id);
           
@@ -203,43 +202,47 @@ const Auth = () => {
           }
         }
       } catch (error) {
-        console.error("Error during auth check:", error);
+        console.error("Error checking auth:", error);
         if (error instanceof Error) {
           setErrorMessage(error.message);
         }
-      } finally {
-        setIsLoading(false);
       }
     };
     
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, !!session);
+      console.log("Auth state changed:", event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session?.user) {
-        const hasCompletedProfile = await checkProfileCompletion(session.user.id);
-        const hasDashboard = await checkDashboardExists(session.user.id);
-        
-        if (!hasCompletedProfile) {
-          setOnboardingStep('profile');
-        } else if (!hasDashboard) {
-          setOnboardingStep('dashboard');
-        } else {
-          navigate("/", { replace: true });
+        try {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
+          if (!hasCompletedProfile) {
+            setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
+          } else {
+            navigate("/", { replace: true });
+          }
+        } catch (error) {
+          console.error("Error in auth state change:", error);
         }
-      }
-      
-      if (event === 'SIGNED_OUT') {
+      } else if (event === 'SIGNED_OUT') {
         setErrorMessage("");
         setOnboardingStep('auth');
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      console.log("Cleaning up auth subscriptions");
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
+    console.error("Auth error:", error);
     if (error instanceof AuthApiError) {
       switch (error.message) {
         case "Invalid login credentials":
@@ -252,6 +255,60 @@ const Auth = () => {
     }
     return error.message;
   };
+
+  if (onboardingStep === 'auth') {
+    return (
+      <DashboardProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+          <Header />
+          <div className="container flex items-center justify-center min-h-screen py-20 px-4">
+            <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
+              <CardHeader>
+                <CardTitle className="text-center text-2xl font-bold text-primary">
+                  Welcome Back
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {errorMessage && (
+                  <Alert variant="destructive" className="mb-4">
+                    <AlertDescription>{errorMessage}</AlertDescription>
+                  </Alert>
+                )}
+                <SupabaseAuth 
+                  supabaseClient={supabase}
+                  appearance={{
+                    theme: ThemeSupa,
+                    variables: {
+                      default: {
+                        colors: {
+                          brand: '#3B82F6',
+                          brandAccent: '#2563EB',
+                        },
+                      },
+                    },
+                    className: {
+                      container: 'animate-fade-in',
+                      button: 'bg-blue-500 hover:bg-blue-600',
+                      label: 'text-sm font-medium text-gray-700',
+                      input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
+                      message: 'text-sm text-red-600',
+                      anchor: 'text-sm text-blue-500 hover:text-blue-600',
+                    },
+                  }}
+                  providers={[]}
+                  redirectTo={`${window.location.origin}/dashboard`}
+                  onError={(error) => {
+                    console.error("Auth error occurred:", error);
+                    setErrorMessage(getErrorMessage(error));
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </DashboardProvider>
+    );
+  }
 
   if (onboardingStep === 'profile') {
     return (
@@ -476,30 +533,11 @@ const Auth = () => {
                   },
                 }}
                 providers={[]}
-                view="sign_in"
-                redirectTo={window.location.origin}
-                localization={{
-                  variables: {
-                    sign_in: {
-                      email_label: 'Email address',
-                      password_label: 'Password',
-                      button_label: 'Sign in',
-                      link_text: 'Already have an account? Sign in',
-                    },
-                    sign_up: {
-                      email_label: 'Email address',
-                      password_label: 'Create a password',
-                      button_label: 'Create account',
-                      link_text: "Don't have an account? Sign up",
-                    },
-                    forgotten_password: {
-                      email_label: 'Email address',
-                      button_label: 'Send reset instructions',
-                      link_text: 'Forgot your password?',
-                    },
-                  },
+                redirectTo={`${window.location.origin}/dashboard`}
+                onError={(error) => {
+                  console.error("Auth error occurred:", error);
+                  setErrorMessage(getErrorMessage(error));
                 }}
-                showLinks={true}
               />
             </CardContent>
           </Card>
