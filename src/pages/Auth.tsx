@@ -22,6 +22,21 @@ const Auth = () => {
     position: "",
   });
 
+  const checkProfileCompletion = async (userId: string) => {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('full_name, company_name, position')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      console.error("Error checking profile:", error);
+      return false;
+    }
+
+    return !!(profile?.full_name && profile?.company_name && profile?.position);
+  };
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -65,21 +80,30 @@ const Auth = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log("User already has a session, redirecting to /");
-        navigate("/", { replace: true });
+      if (session?.user) {
+        const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+        if (!hasCompletedProfile) {
+          setShowProfileForm(true);
+        } else {
+          navigate("/", { replace: true });
+        }
       }
     };
     
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, !!session);
       
-      if (event === 'SIGNED_IN') {
-        setShowProfileForm(true);
-      } else if (session && !showProfileForm) {
-        navigate("/", { replace: true });
+      if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        if (session?.user) {
+          const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          if (!hasCompletedProfile) {
+            setShowProfileForm(true);
+          } else {
+            navigate("/", { replace: true });
+          }
+        }
       }
       
       if (event === "SIGNED_OUT") {
@@ -97,7 +121,7 @@ const Auth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [navigate, showProfileForm]);
+  }, [navigate]);
 
   const getErrorMessage = (error: AuthError) => {
     switch (error.message) {
