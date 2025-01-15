@@ -184,8 +184,8 @@ const IndexContent = () => {
         console.log("Token refreshed successfully");
       }
 
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        console.log("User signed out or deleted, redirecting to auth");
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out, redirecting to auth");
         navigate("/auth");
       }
     });
