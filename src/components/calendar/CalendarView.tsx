@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Task } from '@/types/task';
-import { format } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
+import { format, isSameDay, differenceInDays } from 'date-fns';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { DragDropContext, Draggable, Droppable } from '@hello-pangea/dnd';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { CalendarCheck, Clock, CalendarRange } from 'lucide-react';
 
 interface CalendarViewProps {
   tasks: Task[];
@@ -29,7 +31,6 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
       const endDate = new Date(task.date_ended);
       const currentDate = new Date(date);
       
-      // Reset time components for accurate date comparison
       currentDate.setHours(0, 0, 0, 0);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(0, 0, 0, 0);
@@ -37,6 +38,20 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
       return currentDate >= startDate && currentDate <= endDate;
     });
   };
+
+  const calendarStats = useMemo(() => {
+    const stats = {
+      totalTasks: tasks.length,
+      completedTasks: tasks.filter(task => new Date(task.date_completed) <= new Date()).length,
+      averageDuration: Math.round(tasks.reduce((acc, task) => acc + task.duration_minutes, 0) / tasks.length),
+      tasksByDifficulty: {
+        Low: tasks.filter(task => task.difficulty === 'Low').length,
+        Medium: tasks.filter(task => task.difficulty === 'Medium').length,
+        High: tasks.filter(task => task.difficulty === 'High').length,
+      },
+    };
+    return stats;
+  }, [tasks]);
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination || !selectedDate) return;
@@ -47,7 +62,7 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
     if (!task) return;
 
     const newStartDate = new Date(selectedDate);
-    const duration = (new Date(task.date_ended).getTime() - new Date(task.date_started).getTime()) / (1000 * 60 * 60 * 24);
+    const duration = differenceInDays(new Date(task.date_ended), new Date(task.date_started));
     const newEndDate = new Date(newStartDate);
     newEndDate.setDate(newStartDate.getDate() + duration);
 
@@ -79,70 +94,186 @@ const CalendarView = ({ tasks, onTaskUpdate }: CalendarViewProps) => {
     }
   };
 
-  return (
-    <div className="space-y-4">
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-[300px,1fr] gap-4">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={setSelectedDate}
-            className="rounded-md border bg-white"
-          />
-          
-          {selectedDate && (
-            <Droppable droppableId={format(selectedDate, 'yyyy-MM-dd')}>
-              {(provided) => (
-                <Card className="h-fit" ref={provided.innerRef} {...provided.droppableProps}>
-                  <CardContent className="p-4 space-y-2">
-                    <h3 className="font-medium">
-                      Tasks for {format(selectedDate, 'MMMM d, yyyy')}
-                    </h3>
-                    {getTasksForDate(selectedDate).map((task, index) => (
-                      <Draggable
-                        key={task.id}
-                        draggableId={task.id.toString()}
-                        index={index}
-                      >
-                        {(provided, snapshot) => (
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div
-                                  ref={provided.innerRef}
-                                  {...provided.draggableProps}
-                                  {...provided.dragHandleProps}
-                                  className={cn(
-                                    "p-3 rounded-md mb-2 cursor-grab active:cursor-grabbing",
-                                    snapshot.isDragging ? "bg-accent" : "bg-muted",
-                                    task.difficulty === 'Low' && 'border-l-4 border-green-500',
-                                    task.difficulty === 'Medium' && 'border-l-4 border-yellow-500',
-                                    task.difficulty === 'High' && 'border-l-4 border-red-500'
-                                  )}
-                                >
-                                  <h4 className="font-medium">{task.title}</h4>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <div className="space-y-1">
-                                  <p className="font-medium">{task.title}</p>
-                                  <p>Duration: {task.duration_minutes} minutes</p>
-                                  <p>Difficulty: {task.difficulty}</p>
-                                </div>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </CardContent>
-                </Card>
-              )}
-            </Droppable>
+  const getDayContent = (date: Date) => {
+    const dayTasks = getTasksForDate(date);
+    if (dayTasks.length === 0) return null;
+
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Badge 
+          variant="secondary" 
+          className={cn(
+            "absolute bottom-1 right-1 w-5 h-5 p-0 flex items-center justify-center rounded-full",
+            dayTasks.some(t => t.difficulty === 'High') && 'bg-red-100 text-red-700',
+            dayTasks.some(t => t.difficulty === 'Medium') && !dayTasks.some(t => t.difficulty === 'High') && 'bg-yellow-100 text-yellow-700',
+            dayTasks.every(t => t.difficulty === 'Low') && 'bg-green-100 text-green-700'
           )}
-        </div>
-      </DragDropContext>
+        >
+          {dayTasks.length}
+        </Badge>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr,300px] gap-6">
+        <Card className="p-4 bg-white/50 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2">
+              <CalendarRange className="h-5 w-5 text-blue-500" />
+              Calendar Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="p-4 bg-blue-50 rounded-lg">
+                <div className="text-sm text-blue-600 mb-1">Total Tasks</div>
+                <div className="text-2xl font-semibold">{calendarStats.totalTasks}</div>
+              </div>
+              <div className="p-4 bg-green-50 rounded-lg">
+                <div className="text-sm text-green-600 mb-1">Completed</div>
+                <div className="text-2xl font-semibold">{calendarStats.completedTasks}</div>
+              </div>
+              <div className="p-4 bg-purple-50 rounded-lg">
+                <div className="text-sm text-purple-600 mb-1">Avg. Duration</div>
+                <div className="text-2xl font-semibold">{calendarStats.averageDuration}m</div>
+              </div>
+              <div className="p-4 bg-orange-50 rounded-lg">
+                <div className="text-sm text-orange-600 mb-1">Active Tasks</div>
+                <div className="text-2xl font-semibold">
+                  {calendarStats.totalTasks - calendarStats.completedTasks}
+                </div>
+              </div>
+            </div>
+
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 md:grid-cols-[300px,1fr] gap-4">
+                <Calendar
+                  mode="single"
+                  selected={selectedDate}
+                  onSelect={setSelectedDate}
+                  className="rounded-md border bg-white"
+                  components={{
+                    DayContent: ({ date }) => getDayContent(date),
+                  }}
+                />
+                
+                {selectedDate && (
+                  <Droppable droppableId={format(selectedDate, 'yyyy-MM-dd')}>
+                    {(provided) => (
+                      <Card className="h-fit" ref={provided.innerRef} {...provided.droppableProps}>
+                        <CardContent className="p-4 space-y-2">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="font-medium flex items-center gap-2">
+                              <CalendarCheck className="h-4 w-4 text-blue-500" />
+                              Tasks for {format(selectedDate, 'MMMM d, yyyy')}
+                            </h3>
+                            <Clock className="h-4 w-4 text-blue-500" />
+                          </div>
+                          {getTasksForDate(selectedDate).map((task, index) => (
+                            <Draggable
+                              key={task.id}
+                              draggableId={task.id.toString()}
+                              index={index}
+                            >
+                              {(provided, snapshot) => (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={cn(
+                                          "p-3 rounded-md mb-2 cursor-grab active:cursor-grabbing transition-all duration-200",
+                                          snapshot.isDragging ? "bg-accent shadow-lg scale-[1.02]" : "bg-muted hover:bg-accent/50",
+                                          task.difficulty === 'Low' && 'border-l-4 border-green-500',
+                                          task.difficulty === 'Medium' && 'border-l-4 border-yellow-500',
+                                          task.difficulty === 'High' && 'border-l-4 border-red-500'
+                                        )}
+                                      >
+                                        <div className="space-y-1">
+                                          <h4 className="font-medium line-clamp-1">{task.title}</h4>
+                                          <div className="flex items-center gap-2 text-sm text-gray-500">
+                                            <Clock className="h-3 w-3" />
+                                            {task.duration_minutes} minutes
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <div className="space-y-2">
+                                        <p className="font-medium">{task.title}</p>
+                                        <p className="text-sm">{task.description}</p>
+                                        <div className="flex flex-wrap gap-1">
+                                          {task.skills_acquired.split(',').map((skill, i) => (
+                                            <Badge key={i} variant="outline" className="text-xs">
+                                              {skill.trim()}
+                                            </Badge>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </Draggable>
+                          ))}
+                          {provided.placeholder}
+                        </CardContent>
+                      </Card>
+                    )}
+                  </Droppable>
+                )}
+              </div>
+            </DragDropContext>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white/50 backdrop-blur-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg">Task Distribution</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <div className="text-sm text-gray-500 mb-2">By Difficulty</div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">High Priority</span>
+                    <Badge variant="outline" className="bg-red-50 text-red-700">
+                      {calendarStats.tasksByDifficulty.High}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Medium Priority</span>
+                    <Badge variant="outline" className="bg-yellow-50 text-yellow-700">
+                      {calendarStats.tasksByDifficulty.Medium}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm">Low Priority</span>
+                    <Badge variant="outline" className="bg-green-50 text-green-700">
+                      {calendarStats.tasksByDifficulty.Low}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t">
+                <div className="text-sm text-gray-500 mb-2">Completion Rate</div>
+                <div className="text-2xl font-semibold">
+                  {Math.round((calendarStats.completedTasks / calendarStats.totalTasks) * 100)}%
+                </div>
+                <div className="text-sm text-gray-500">
+                  {calendarStats.completedTasks} of {calendarStats.totalTasks} tasks completed
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 };
