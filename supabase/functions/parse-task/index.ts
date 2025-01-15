@@ -1,7 +1,12 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -10,9 +15,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  console.log('Received request:', req.method);
-
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { 
       headers: corsHeaders,
@@ -21,17 +23,59 @@ serve(async (req) => {
   }
 
   try {
-    if (!openAIApiKey) {
-      console.error('OpenAI API key not found');
-      throw new Error('OpenAI API key not configured');
-    }
-
-    const { taskDescription } = await req.json();
-    console.log('Processing task description:', taskDescription);
+    const { taskDescription, userId, isInitialRequest = true } = await req.json();
+    console.log('Processing task description:', taskDescription, 'for user:', userId);
 
     if (!taskDescription) {
       throw new Error('Task description is required');
     }
+
+    // Fetch user's recent tasks for context
+    const { data: recentTasks, error: tasksError } = await supabase
+      .from('tasks')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (tasksError) {
+      console.error('Error fetching recent tasks:', tasksError);
+      throw new Error('Failed to fetch context');
+    }
+
+    const recentTasksContext = recentTasks?.map(task => ({
+      title: task.title,
+      skills: task.skills_acquired,
+      difficulty: task.difficulty
+    }));
+
+    const systemPrompt = isInitialRequest ? 
+      `You are a task analysis assistant that helps optimize task descriptions and ensures they align with the user's learning journey. 
+      Recent tasks context: ${JSON.stringify(recentTasksContext)}
+      
+      If you need clarification, respond with a JSON object containing:
+      {
+        "needsClarification": true,
+        "question": "Your specific question here",
+        "reasoning": "Why you need this clarification"
+      }
+      
+      If you have enough information, respond with a JSON object containing:
+      {
+        "needsClarification": false,
+        "parsedTask": {
+          "title": "Clear, professional title",
+          "description": "Detailed, well-structured description",
+          "date_started": "YYYY-MM-DD",
+          "date_ended": "YYYY-MM-DD",
+          "difficulty": "Low/Medium/High",
+          "skills_acquired": "Comma-separated list",
+          "key_challenges": "Main challenges faced",
+          "key_takeaways": "Key learnings and insights"
+        }
+      }` :
+      `You are a task optimization assistant. Based on the clarification provided, generate the final task details.
+      Format the response as a JSON object with the parsedTask structure as shown above.`;
 
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -44,26 +88,16 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `You are a task parser that extracts structured information from natural language descriptions.
-              Return a JSON object with these fields:
-              - title (string): A clear, concise title for the task
-              - date_started (YYYY-MM-DD): The start date, default to today if not specified
-              - date_ended (YYYY-MM-DD): The end date, default to today if not specified
-              - difficulty (string): Must be exactly "Low", "Medium", or "High"
-              - skills_acquired (string): Comma-separated list of skills
-              Only return the JSON object, no other text.`
+            content: systemPrompt
           },
           {
             role: 'user',
             content: taskDescription
           }
         ],
-        temperature: 0.3,
-        max_tokens: 500,
+        temperature: 0.7,
       }),
     });
-
-    console.log('OpenAI API response status:', openAIResponse.status);
 
     if (!openAIResponse.ok) {
       const errorText = await openAIResponse.text();
@@ -72,35 +106,22 @@ serve(async (req) => {
     }
 
     const data = await openAIResponse.json();
-    console.log('OpenAI response data:', data);
+    console.log('OpenAI response:', data);
 
     if (!data.choices?.[0]?.message?.content) {
       throw new Error('Invalid response format from OpenAI');
     }
 
-    let parsedTask;
-    try {
-      parsedTask = JSON.parse(data.choices[0].message.content);
-      console.log('Successfully parsed task:', parsedTask);
-
-      // Validate the required fields
-      if (!parsedTask.title || !parsedTask.difficulty || 
-          !['Low', 'Medium', 'High'].includes(parsedTask.difficulty)) {
-        throw new Error('Invalid task format returned from OpenAI');
-      }
-    } catch (e) {
-      console.error('Failed to parse OpenAI response:', e);
-      throw new Error('Failed to parse task details');
-    }
+    const parsedResponse = JSON.parse(data.choices[0].message.content);
+    console.log('Parsed response:', parsedResponse);
 
     return new Response(
-      JSON.stringify({ parsedTask }),
+      JSON.stringify(parsedResponse),
       { 
         headers: { 
           ...corsHeaders, 
           'Content-Type': 'application/json' 
-        },
-        status: 200
+        }
       }
     );
   } catch (error) {

@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { Plus, Wand2, X, Check, Loader2 } from "lucide-react"
+import { Plus, Wand2, X, Check, Loader2, MessageCircle } from "lucide-react"
 import { useToast } from "@/components/ui/use-toast"
 import { supabase } from "@/integrations/supabase/client"
 import { Database } from "@/integrations/supabase/types"
@@ -37,6 +37,10 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [nlpInput, setNlpInput] = useState("")
+  const [clarificationNeeded, setClarificationNeeded] = useState(false)
+  const [clarificationQuestion, setClarificationQuestion] = useState("")
+  const [clarificationReasoning, setClarificationReasoning] = useState("")
+  const [clarificationResponse, setClarificationResponse] = useState("")
   const [processingNLP, setProcessingNLP] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
   const [formData, setFormData] = useState({
@@ -45,15 +49,15 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     date_started: new Date().toISOString().split('T')[0],
     date_ended: new Date().toISOString().split('T')[0],
     date_completed: new Date().toISOString().split('T')[0],
-    description: "Quick task entry",
+    description: "",
     skills_acquired: "",
-    key_challenges: "Added via quick entry",
-    key_takeaways: "Added via quick entry",
+    key_challenges: "",
+    key_takeaways: "",
     duration_minutes: 30,
   })
 
-  const handleNLPProcess = async () => {
-    if (!nlpInput.trim()) {
+  const handleNLPProcess = async (userResponse?: string) => {
+    if (!nlpInput.trim() && !userResponse) {
       toast({
         title: "Error",
         description: "Please enter a task description",
@@ -64,30 +68,47 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
 
     setProcessingNLP(true)
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("User not authenticated")
+
       const { data, error } = await supabase.functions.invoke('parse-task', {
-        body: { taskDescription: nlpInput },
-      });
+        body: { 
+          taskDescription: userResponse || nlpInput,
+          userId: user.id,
+          isInitialRequest: !userResponse
+        },
+      })
 
-      if (error) throw error;
-      if (!data.parsedTask) throw new Error("Failed to parse task details");
+      if (error) throw error
 
-      const { parsedTask } = data;
-      console.log('Parsed task:', parsedTask);
+      if (data.needsClarification) {
+        setClarificationNeeded(true)
+        setClarificationQuestion(data.question)
+        setClarificationReasoning(data.reasoning)
+        setShowPreview(false)
+      } else {
+        const { parsedTask } = data
+        setFormData(prev => ({
+          ...prev,
+          title: parsedTask.title || prev.title,
+          description: parsedTask.description || prev.description,
+          date_started: parsedTask.date_started || prev.date_started,
+          date_ended: parsedTask.date_ended || prev.date_ended,
+          date_completed: parsedTask.date_ended || prev.date_completed,
+          difficulty: (parsedTask.difficulty as DifficultyLevel) || prev.difficulty,
+          skills_acquired: parsedTask.skills_acquired || prev.skills_acquired,
+          key_challenges: parsedTask.key_challenges || prev.key_challenges,
+          key_takeaways: parsedTask.key_takeaways || prev.key_takeaways,
+        }))
+        setClarificationNeeded(false)
+        setShowPreview(true)
+      }
 
-      setFormData(prev => ({
-        ...prev,
-        title: parsedTask.title || prev.title,
-        date_started: parsedTask.date_started || prev.date_started,
-        date_ended: parsedTask.date_ended || prev.date_ended,
-        date_completed: parsedTask.date_ended || prev.date_completed,
-        difficulty: (parsedTask.difficulty as DifficultyLevel) || prev.difficulty,
-        skills_acquired: parsedTask.skills_acquired || prev.skills_acquired,
-      }))
-
-      setShowPreview(true)
       toast({
         title: "Success",
-        description: "Task details extracted successfully",
+        description: data.needsClarification ? 
+          "Please provide additional information" : 
+          "Task details extracted successfully",
       })
     } catch (error) {
       console.error('Error processing NLP:', error)
@@ -105,9 +126,12 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     setLoading(true)
     
     try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("User not authenticated")
+
       const { error } = await supabase
         .from('tasks')
-        .insert([formData])
+        .insert([{ ...formData, user_id: user.id }])
       
       if (error) throw error
       
@@ -119,13 +143,21 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
       setOpen(false)
       onTaskAdded()
       setFormData({
-        ...formData,
         title: "",
         difficulty: "" as DifficultyLevel,
+        date_started: new Date().toISOString().split('T')[0],
+        date_ended: new Date().toISOString().split('T')[0],
+        date_completed: new Date().toISOString().split('T')[0],
+        description: "Quick task entry",
         skills_acquired: "",
+        key_challenges: "Added via quick entry",
+        key_takeaways: "Added via quick entry",
+        duration_minutes: 30,
       })
       setNlpInput("")
       setShowPreview(false)
+      setClarificationNeeded(false)
+      setClarificationResponse("")
     } catch (error) {
       console.error("Error adding task:", error)
       toast({
@@ -136,6 +168,19 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleClarificationSubmit = () => {
+    if (!clarificationResponse.trim()) {
+      toast({
+        title: "Error",
+        description: "Please provide a response to the clarification question",
+        variant: "destructive",
+      })
+      return
+    }
+    handleNLPProcess(clarificationResponse)
+    setClarificationResponse("")
   }
 
   return (
@@ -163,6 +208,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
               onChange={(e) => {
                 setNlpInput(e.target.value)
                 if (showPreview) setShowPreview(false)
+                if (clarificationNeeded) setClarificationNeeded(false)
               }}
               placeholder="Describe your task naturally, e.g.: Complete the marketing report by Jan 20, 2025, difficulty medium, skills: Excel, analysis"
               className="min-h-[100px] pr-[100px] resize-none bg-gray-50/50 focus:bg-white transition-colors"
@@ -170,7 +216,7 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
             <Button
               size="sm"
               className="absolute right-2 top-2"
-              onClick={handleNLPProcess}
+              onClick={() => handleNLPProcess()}
               disabled={processingNLP || !nlpInput.trim()}
             >
               {processingNLP ? (
@@ -183,6 +229,43 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
           </div>
 
           <AnimatePresence>
+            {clarificationNeeded && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 20 }}
+                transition={{ duration: 0.2 }}
+              >
+                <Card className="p-4 space-y-4 bg-blue-50/50 backdrop-blur-sm border-blue-200">
+                  <div className="flex items-start gap-3">
+                    <MessageCircle className="w-5 h-5 text-blue-500 mt-1" />
+                    <div className="space-y-2">
+                      <h3 className="font-medium text-blue-900">{clarificationQuestion}</h3>
+                      <p className="text-sm text-blue-700">{clarificationReasoning}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Textarea
+                      value={clarificationResponse}
+                      onChange={(e) => setClarificationResponse(e.target.value)}
+                      placeholder="Your response..."
+                      className="resize-none bg-white/80"
+                    />
+                    <Button 
+                      onClick={handleClarificationSubmit}
+                      disabled={!clarificationResponse.trim() || processingNLP}
+                      className="w-full"
+                    >
+                      {processingNLP ? (
+                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      ) : null}
+                      Submit Response
+                    </Button>
+                  </div>
+                </Card>
+              </motion.div>
+            )}
+
             {showPreview && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -199,6 +282,15 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
                       <Input
                         value={formData.title}
                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label>Description</Label>
+                      <Textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         className="mt-1"
                       />
                     </div>
@@ -259,6 +351,24 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
                         />
                       </div>
                     </div>
+
+                    <div>
+                      <Label>Key Challenges</Label>
+                      <Textarea
+                        value={formData.key_challenges}
+                        onChange={(e) => setFormData({ ...formData, key_challenges: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>Key Takeaways</Label>
+                      <Textarea
+                        value={formData.key_takeaways}
+                        onChange={(e) => setFormData({ ...formData, key_takeaways: e.target.value })}
+                        className="mt-1"
+                      />
+                    </div>
                   </div>
                 </Card>
               </motion.div>
@@ -273,6 +383,8 @@ const QuickAddTask = ({ onTaskAdded }: QuickAddTaskProps) => {
               setOpen(false)
               setShowPreview(false)
               setNlpInput("")
+              setClarificationNeeded(false)
+              setClarificationResponse("")
             }}
           >
             <X className="w-4 h-4 mr-2" />
