@@ -5,13 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { SocialLinks } from "@/integrations/supabase/types";
 import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Trash2, Upload, Link as LinkIcon } from "lucide-react";
+import { PlusCircle, Trash2, Upload } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ProfileData {
-  id: string; // Add id to the interface
+  id: string;
   full_name: string;
   company_name: string;
   position: string;
@@ -20,12 +19,11 @@ interface ProfileData {
   learning_goals: string;
   preferred_learning_style: string;
   skills: string[];
-  social_links: SocialLinks;
 }
 
 const Profile = () => {
   const [profile, setProfile] = useState<ProfileData>({
-    id: '', // Initialize with empty string
+    id: '',
     full_name: "",
     company_name: "",
     position: "",
@@ -34,7 +32,6 @@ const Profile = () => {
     learning_goals: "",
     preferred_learning_style: "",
     skills: [],
-    social_links: {},
   });
   const [isLoading, setIsLoading] = useState(true);
   const [newSkill, setNewSkill] = useState("");
@@ -62,7 +59,6 @@ const Profile = () => {
         setProfile({
           ...data,
           skills: data.skills || [],
-          social_links: (data.social_links as SocialLinks) || {},
         });
       }
     } catch (error) {
@@ -120,7 +116,7 @@ const Profile = () => {
         .from('profiles')
         .update({
           ...profile,
-          id: user.id, // Add the required id field
+          id: user.id,
           company_logo_url: logoUrl,
         })
         .eq('id', user.id);
@@ -180,7 +176,6 @@ const Profile = () => {
               <TabsTrigger value="personal">Personal Info</TabsTrigger>
               <TabsTrigger value="professional">Professional</TabsTrigger>
               <TabsTrigger value="learning">Learning</TabsTrigger>
-              <TabsTrigger value="social">Social</TabsTrigger>
             </TabsList>
 
             <TabsContent value="personal" className="space-y-4">
@@ -319,56 +314,6 @@ const Profile = () => {
                   onChange={(e) => setProfile(prev => ({ ...prev, preferred_learning_style: e.target.value }))}
                   placeholder="How do you learn best?"
                 />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="social" className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">LinkedIn</label>
-                <div className="relative">
-                  <Input
-                    value={profile.social_links.linkedin || ""}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      social_links: { ...prev.social_links, linkedin: e.target.value }
-                    }))}
-                    placeholder="LinkedIn URL"
-                    className="pl-10"
-                  />
-                  <LinkIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">GitHub</label>
-                <div className="relative">
-                  <Input
-                    value={profile.social_links.github || ""}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      social_links: { ...prev.social_links, github: e.target.value }
-                    }))}
-                    placeholder="GitHub URL"
-                    className="pl-10"
-                  />
-                  <LinkIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Twitter</label>
-                <div className="relative">
-                  <Input
-                    value={profile.social_links.twitter || ""}
-                    onChange={(e) => setProfile(prev => ({
-                      ...prev,
-                      social_links: { ...prev.social_links, twitter: e.target.value }
-                    }))}
-                    placeholder="Twitter URL"
-                    className="pl-10"
-                  />
-                  <LinkIcon className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
-                </div>
               </div>
             </TabsContent>
           </Tabs>
