@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
 import { AuthError } from "@supabase/supabase-js";
-import { UserPlus, Key } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -111,18 +110,12 @@ const Auth = () => {
                     email_label: 'Email address',
                     password_label: 'Create a password',
                     button_label: 'Create account',
-                    link_text: (<div className="flex items-center gap-2">
-                      <UserPlus className="h-4 w-4" />
-                      <span>Don't have an account? Sign up</span>
-                    </div>),
+                    link_text: "Don't have an account? Sign up",
                   },
                   forgotten_password: {
                     email_label: 'Email address',
                     button_label: 'Send reset instructions',
-                    link_text: (<div className="flex items-center gap-2">
-                      <Key className="h-4 w-4" />
-                      <span>Forgot your password?</span>
-                    </div>),
+                    link_text: 'Forgot your password?',
                   },
                 },
               }}
