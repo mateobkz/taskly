@@ -49,23 +49,38 @@ export type Database = {
       }
       dashboards: {
         Row: {
+          company_name: string | null
           created_at: string | null
+          end_date: string | null
           id: number
+          logo_url: string | null
           name: string
+          position: string | null
+          start_date: string | null
           updated_at: string | null
           user_id: string | null
         }
         Insert: {
+          company_name?: string | null
           created_at?: string | null
+          end_date?: string | null
           id?: number
+          logo_url?: string | null
           name: string
+          position?: string | null
+          start_date?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
         Update: {
+          company_name?: string | null
           created_at?: string | null
+          end_date?: string | null
           id?: number
+          logo_url?: string | null
           name?: string
+          position?: string | null
+          start_date?: string | null
           updated_at?: string | null
           user_id?: string | null
         }
