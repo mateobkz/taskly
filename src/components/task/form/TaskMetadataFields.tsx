@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Clock, Target } from "lucide-react";
+import { hoursToMinutes, minutesToHours } from "@/utils/timeUtils";
 
 interface TaskMetadataFieldsProps {
   formData: any;
@@ -30,21 +31,33 @@ const getDifficultyColor = (difficulty: string) => {
 };
 
 const TaskMetadataFields = ({ formData, handleChange }: TaskMetadataFieldsProps) => {
+  const handleHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const hours = parseFloat(e.target.value) || 0;
+    const minutes = hoursToMinutes(hours);
+    handleChange({
+      target: {
+        name: 'duration_minutes',
+        value: minutes
+      }
+    } as React.ChangeEvent<HTMLInputElement>);
+  };
+
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="duration_minutes" className="flex items-center gap-2">
+        <Label htmlFor="duration_hours" className="flex items-center gap-2">
           <Clock className="w-4 h-4 text-blue-500" />
-          Total Duration (min)
+          Duration (hours)
         </Label>
         <Input 
-          id="duration_minutes"
-          name="duration_minutes"
+          id="duration_hours"
+          name="duration_hours"
           type="number"
           min="0"
-          value={formData.duration_minutes}
-          onChange={handleChange}
-          placeholder="Total duration in minutes"
+          step="0.25"
+          value={minutesToHours(formData.duration_minutes)}
+          onChange={handleHoursChange}
+          placeholder="Duration in hours"
           className="transition-all duration-200 focus:ring-2 focus:ring-blue-500 bg-white/80"
           required 
         />

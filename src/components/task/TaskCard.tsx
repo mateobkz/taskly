@@ -1,149 +1,97 @@
-import React from "react"
-import { Task } from "@/types/task"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Eye, Pencil, Trash2 } from "lucide-react"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+import React from "react";
+import { Task } from "@/types/task";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Eye, Pencil, Trash2, Clock } from "lucide-react";
+import EnhanceTaskButton from "./EnhanceTaskButton";
+import { formatDuration } from "@/utils/timeUtils";
 
 interface TaskCardProps {
-  task: Task
-  onView: (task: Task) => void
-  onEdit: (task: Task) => void
-  onDelete: (taskId: number) => void
+  task: Task;
+  onView: (task: Task) => void;
+  onEdit: (task: Task) => void;
+  onDelete: (taskId: number) => void;
 }
 
 const getDifficultyColor = (difficulty: string) => {
   switch (difficulty.toLowerCase()) {
     case 'low':
-      return 'bg-gradient-to-r from-green-100 to-green-200 text-green-800 border-green-300';
+      return 'bg-green-100 text-green-800 border-green-200';
     case 'medium':
-      return 'bg-gradient-to-r from-yellow-100 to-yellow-200 text-yellow-800 border-yellow-300';
+      return 'bg-yellow-100 text-yellow-800 border-yellow-200';
     case 'high':
-      return 'bg-gradient-to-r from-red-100 to-red-200 text-red-800 border-red-300';
+      return 'bg-red-100 text-red-800 border-red-200';
     default:
-      return 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 border-gray-300';
+      return 'bg-gray-100 text-gray-800 border-gray-200';
   }
-};
-
-const formatDateRange = (startDate: string, endDate: string) => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  
-  if (startDate === endDate) {
-    return new Date(startDate).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  }
-  
-  return `${start.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric'
-  })}–${end.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  })}`;
 };
 
 const TaskCard = ({ task, onView, onEdit, onDelete }: TaskCardProps) => {
   return (
-    <div 
-      className="p-4 border rounded-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-lg bg-white/80 backdrop-blur-sm group animate-fade-in"
-    >
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-medium text-gray-900 group-hover:text-black transition-colors line-clamp-1">
-            {task.title}
-          </h3>
-          <Badge className={`${getDifficultyColor(task.difficulty)} shadow-sm`}>
-            {task.difficulty}
-          </Badge>
-        </div>
-        
-        <p className="text-sm text-gray-600">
-          {formatDateRange(task.date_started, task.date_ended)}
-        </p>
-        
-        <div className="flex flex-wrap gap-2">
-          {task.skills_acquired.split(',').slice(0, 3).map((skill, index) => (
-            <Badge 
-              key={index}
-              variant="outline" 
-              className="bg-blue-50/50 border-blue-200 text-blue-700 group-hover:bg-blue-100/50 transition-colors"
-            >
-              {skill.trim()}
+    <Card className="transition-all duration-200 hover:shadow-md bg-white/50 backdrop-blur-sm">
+      <CardContent className="p-4">
+        <div className="flex flex-col space-y-4">
+          <div className="flex justify-between items-start">
+            <h3 className="font-medium text-lg line-clamp-1">{task.title}</h3>
+            <Badge className={getDifficultyColor(task.difficulty)}>
+              {task.difficulty}
             </Badge>
-          ))}
-          {task.skills_acquired.split(',').length > 3 && (
-            <Badge 
-              variant="outline" 
-              className="bg-gray-50 border-gray-200 text-gray-600"
-            >
-              +{task.skills_acquired.split(',').length - 3} more
-            </Badge>
-          )}
-        </div>
+          </div>
 
-        <div className="flex justify-end gap-2 pt-2">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onView(task)}
-            className="transition-all duration-200 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => onEdit(task)}
-            className="transition-all duration-200 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200"
-          >
-            <Pencil className="h-4 w-4" />
-          </Button>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
+          <p className="text-sm text-gray-600 line-clamp-2">
+            {task.description}
+          </p>
+
+          <div className="flex flex-wrap gap-2">
+            {task.skills_acquired.split(',').map((skill, index) => (
+              <Badge
+                key={index}
                 variant="outline"
-                size="icon"
-                className="transition-all duration-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200"
+                className="bg-blue-50 text-blue-700 border-blue-200"
+              >
+                {skill.trim()}
+              </Badge>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-gray-500">
+              <Clock className="h-4 w-4" />
+              {formatDuration(task.duration_minutes)}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <EnhanceTaskButton task={task} onTaskUpdated={() => onEdit(task)} />
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onView(task)}
+                className="text-blue-600 hover:bg-blue-50"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onEdit(task)}
+                className="text-yellow-600 hover:bg-yellow-50"
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => onDelete(task.id)}
+                className="text-red-600 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent className="bg-white">
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete Task</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to delete this task? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={() => onDelete(task.id)}
-                  className="bg-red-600 hover:bg-red-700 text-white"
-                >
-                  Delete
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
