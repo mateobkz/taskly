@@ -44,6 +44,56 @@ export type Database = {
           },
         ]
       }
+      goals: {
+        Row: {
+          category: string
+          created_at: string
+          current_value: number | null
+          end_date: string
+          id: number
+          period: string
+          start_date: string
+          target_value: number
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          current_value?: number | null
+          end_date: string
+          id?: number
+          period: string
+          start_date?: string
+          target_value: number
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          current_value?: number | null
+          end_date?: string
+          id?: number
+          period?: string
+          start_date?: string
+          target_value?: number
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goals_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -103,7 +153,9 @@ export type Database = {
           duration_minutes: number
           id: number
           key_insights: string | null
+          priority: string | null
           skills_acquired: string
+          status: string | null
           title: string
           updated_at: string
           user_id: string | null
@@ -118,7 +170,9 @@ export type Database = {
           duration_minutes?: number
           id?: number
           key_insights?: string | null
+          priority?: string | null
           skills_acquired: string
+          status?: string | null
           title: string
           updated_at?: string
           user_id?: string | null
@@ -133,7 +187,9 @@ export type Database = {
           duration_minutes?: number
           id?: number
           key_insights?: string | null
+          priority?: string | null
           skills_acquired?: string
+          status?: string | null
           title?: string
           updated_at?: string
           user_id?: string | null

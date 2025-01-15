@@ -9,4 +9,6 @@ export type Task = {
   description: string;
   key_insights: string;
   duration_minutes: number;
+  priority?: 'Low' | 'Medium' | 'High';
+  status?: 'Not Started' | 'In Progress' | 'Completed';
 };

@@ -14,15 +14,18 @@ import {
 import TaskForm from "@/components/TaskFormNew";
 import TaskList from "./dashboard/TaskList";
 import { Task } from "@/types/task";
+import { Goal } from "@/types/goal";
 import { Badge } from "@/components/ui/badge";
 import HeroSection from "./dashboard/HeroSection";
 import KeyStats from "./dashboard/KeyStats";
 import InsightsSection from "./dashboard/InsightsSection";
 import ChartSection from "./dashboard/ChartSection";
+import GoalProgress from "./dashboard/GoalProgress";
 import { useNavigate } from "react-router-dom";
 
 const Dashboard = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState<'Low' | 'Medium' | 'High' | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -77,8 +80,32 @@ const Dashboard = () => {
     }
   };
 
+  const fetchGoals = async () => {
+    console.log("Fetching goals");
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('goals')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      setGoals(data || []);
+    } catch (error) {
+      console.error("Error fetching goals:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch goals",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     fetchTasks();
+    fetchGoals();
   }, [searchQuery, selectedDifficulty]);
 
   const handleDeleteTask = async (taskId: number) => {
@@ -164,7 +191,10 @@ const Dashboard = () => {
 
       <HeroSection tasks={tasks} />
       
-      <KeyStats tasks={tasks} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <KeyStats tasks={tasks} />
+        <GoalProgress goals={goals} />
+      </div>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <InsightsSection tasks={tasks} />
