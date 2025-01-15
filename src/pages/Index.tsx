@@ -2,13 +2,14 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { DashboardProvider } from "@/contexts/DashboardContext";
+import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import Header from "@/components/layout/Header";
 import MainTabs from "@/components/layout/MainTabs";
 import AuthStateHandler from "@/components/layout/AuthStateHandler";
 import QuickAddTask from "@/components/task/QuickAddTask";
 import FeedbackButton from "@/components/feedback/FeedbackButton";
 import OnboardingDialog from "@/components/dashboard/OnboardingDialog";
+import { Task } from "@/types/task";
 
 const IndexContent = () => {
   const { toast } = useToast();
