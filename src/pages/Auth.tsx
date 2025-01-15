@@ -13,13 +13,13 @@ import { extractDomainFromCompany, getCompanyLogo } from "@/utils/companyUtils";
 import { Upload } from "lucide-react";
 import { DashboardProvider } from "@/contexts/DashboardContext";
 
-type OnboardingStep = 'profile' | 'dashboard';
+type OnboardingStep = 'auth' | 'profile' | 'dashboard';
 
 const Auth = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [errorMessage, setErrorMessage] = useState("");
-  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('profile');
+  const [onboardingStep, setOnboardingStep] = useState<OnboardingStep>('auth');
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -52,6 +52,21 @@ const Auth = () => {
     return !!(profile?.full_name && profile?.company_name && profile?.position);
   };
 
+  const checkDashboardExists = async (userId: string) => {
+    const { data: dashboards, error } = await supabase
+      .from('dashboards')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1);
+
+    if (error) {
+      console.error("Error checking dashboards:", error);
+      return false;
+    }
+
+    return dashboards && dashboards.length > 0;
+  };
+
   const handleProfileSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -61,7 +76,6 @@ const Auth = () => {
 
       const domain = extractDomainFromCompany(profileData.company);
       const logoUrl = getCompanyLogo(domain);
-      console.log("Company logo URL:", logoUrl);
 
       const { error: profileError } = await supabase
         .from('profiles')
@@ -76,9 +90,7 @@ const Auth = () => {
 
       if (profileError) throw profileError;
       
-      // Move to dashboard creation step
       setOnboardingStep('dashboard');
-      // Pre-fill dashboard data based on profile
       setDashboardData(prev => ({
         ...prev,
         name: `${profileData.company} Experience`,
@@ -122,8 +134,6 @@ const Auth = () => {
           name: dashboardData.name,
           company_name: dashboardData.company_name,
           position: dashboardData.position,
-          start_date: dashboardData.start_date,
-          end_date: dashboardData.end_date,
           logo_url: logoUrl,
         });
 
@@ -156,8 +166,12 @@ const Auth = () => {
 
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
           if (!hasCompletedProfile) {
             setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
           } else {
             navigate("/", { replace: true });
           }
@@ -166,8 +180,12 @@ const Auth = () => {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
           if (!hasCompletedProfile) {
             setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
           } else {
             navigate("/", { replace: true });
           }
@@ -183,8 +201,12 @@ const Auth = () => {
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         if (session?.user) {
           const hasCompletedProfile = await checkProfileCompletion(session.user.id);
+          const hasDashboard = await checkDashboardExists(session.user.id);
+          
           if (!hasCompletedProfile) {
             setOnboardingStep('profile');
+          } else if (!hasDashboard) {
+            setOnboardingStep('dashboard');
           } else {
             navigate("/", { replace: true });
           }
@@ -193,7 +215,7 @@ const Auth = () => {
       
       if (event === "SIGNED_OUT") {
         setErrorMessage("");
-        setOnboardingStep('profile');
+        setOnboardingStep('auth');
       }
       
       if (event === "USER_UPDATED") {
@@ -221,6 +243,72 @@ const Auth = () => {
     }
     return error.message;
   };
+
+  if (onboardingStep === 'profile') {
+    return (
+      <DashboardProvider>
+        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+          <Header />
+          <div className="container flex items-center justify-center min-h-screen py-20 px-4">
+            <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
+              <CardHeader>
+                <CardTitle className="text-center text-2xl font-bold text-primary">
+                  Complete Your Profile
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">First Name</label>
+                      <Input
+                        required
+                        value={profileData.firstName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium">Last Name</label>
+                      <Input
+                        required
+                        value={profileData.lastName}
+                        onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
+                        className="w-full"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Company</label>
+                    <Input
+                      required
+                      value={profileData.company}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
+                      className="w-full"
+                      placeholder="e.g. Google, Microsoft, etc."
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Position</label>
+                    <Input
+                      required
+                      value={profileData.position}
+                      onChange={(e) => setProfileData(prev => ({ ...prev, position: e.target.value }))}
+                      className="w-full"
+                      placeholder="e.g. Software Engineer, Product Manager, etc."
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
+                    Continue
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </DashboardProvider>
+    );
+  }
 
   if (onboardingStep === 'dashboard') {
     return (
@@ -330,72 +418,6 @@ const Auth = () => {
 
                   <Button type="submit" className="w-full">
                     Create Dashboard & Get Started
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </DashboardProvider>
-    );
-  }
-
-  if (onboardingStep === 'profile') {
-    return (
-      <DashboardProvider>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-          <Header />
-          <div className="container flex items-center justify-center min-h-screen py-20 px-4">
-            <Card className="w-full max-w-md space-y-8 bg-white/80 backdrop-blur-sm shadow-xl animate-scale">
-              <CardHeader>
-                <CardTitle className="text-center text-2xl font-bold text-primary">
-                  Complete Your Profile
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleProfileSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">First Name</label>
-                      <Input
-                        required
-                        value={profileData.firstName}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, firstName: e.target.value }))}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Last Name</label>
-                      <Input
-                        required
-                        value={profileData.lastName}
-                        onChange={(e) => setProfileData(prev => ({ ...prev, lastName: e.target.value }))}
-                        className="w-full"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Company</label>
-                    <Input
-                      required
-                      value={profileData.company}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, company: e.target.value }))}
-                      className="w-full"
-                      placeholder="e.g. Google, Microsoft, etc."
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Position</label>
-                    <Input
-                      required
-                      value={profileData.position}
-                      onChange={(e) => setProfileData(prev => ({ ...prev, position: e.target.value }))}
-                      className="w-full"
-                      placeholder="e.g. Software Engineer, Product Manager, etc."
-                    />
-                  </div>
-                  <Button type="submit" className="w-full bg-blue-500 hover:bg-blue-600">
-                    Continue
                   </Button>
                 </form>
               </CardContent>
