@@ -12,12 +12,145 @@ import Tasks from "./Tasks";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Task } from "@/types/task";
-import { DashboardProvider } from "@/contexts/DashboardContext";
+import { DashboardProvider, useDashboard } from "@/contexts/DashboardContext";
 import { useNavigate } from "react-router-dom";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useState } from "react";
 
-const Index = () => {
+const OnboardingDialog = () => {
+  const { createDashboard } = useDashboard();
+  const [name, setName] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [position, setPosition] = useState("");
+  const { toast } = useToast();
+
+  const handleCreateDashboard = async () => {
+    if (!name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a dashboard name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    await createDashboard({
+      name,
+      company_name: companyName,
+      position,
+    });
+
+    toast({
+      title: "Success",
+      description: "Welcome! Your first dashboard has been created.",
+    });
+  };
+
+  return (
+    <Dialog open={true}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Welcome to Your Learning Journey!</DialogTitle>
+          <DialogDescription>
+            Let's start by creating your first dashboard to track your learning progress.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="name">Dashboard Name*</Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g., My Learning Journey"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="company">Company Name (Optional)</Label>
+            <Input
+              id="company"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              placeholder="Your Company"
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="position">Position (Optional)</Label>
+            <Input
+              id="position"
+              value={position}
+              onChange={(e) => setPosition(e.target.value)}
+              placeholder="Your Role"
+            />
+          </div>
+        </div>
+        <div className="flex justify-end">
+          <Button onClick={handleCreateDashboard}>Create Dashboard</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+const IndexContent = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { dashboards, isLoading } = useDashboard();
+
+  const { data: tasks = [], refetch: refetchTasks } = useQuery({
+    queryKey: ['tasks'],
+    queryFn: async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          console.log("No user found in tasks query");
+          return [];
+        }
+
+        const { data, error } = await supabase
+          .from('tasks')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date_completed', { ascending: false });
+
+        if (error) {
+          console.error("Error fetching tasks:", error);
+          throw error;
+        }
+
+        return data?.map(task => ({
+          ...task,
+          priority: task.priority as Task['priority'],
+          status: task.status as Task['status']
+        })) as Task[];
+      } catch (error) {
+        console.error("Error in tasks query:", error);
+        toast({
+          title: "Error",
+          description: "Failed to fetch tasks. Please try again.",
+          variant: "destructive",
+        });
+        return [];
+      }
+    },
+  });
+
+  const handleTaskAdded = () => {
+    refetchTasks();
+    toast({
+      title: "Task Added",
+      description: "Your task has been successfully recorded.",
+    });
+  };
 
   // Check auth state on mount and handle session errors
   useEffect(() => {
@@ -62,57 +195,13 @@ const Index = () => {
     };
   }, [navigate, toast]);
 
-  const { data: tasks = [], refetch: refetchTasks } = useQuery({
-    queryKey: ['tasks'],
-    queryFn: async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) {
-          console.log("No user found in tasks query");
-          return [];
-        }
-
-        const { data, error } = await supabase
-          .from('tasks')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date_completed', { ascending: false });
-
-        if (error) {
-          console.error("Error fetching tasks:", error);
-          throw error;
-        }
-
-        const typedTasks = data?.map(task => ({
-          ...task,
-          priority: task.priority as Task['priority'],
-          status: task.status as Task['status']
-        })) as Task[];
-
-        return typedTasks;
-      } catch (error) {
-        console.error("Error in tasks query:", error);
-        toast({
-          title: "Error",
-          description: "Failed to fetch tasks. Please try again.",
-          variant: "destructive",
-        });
-        return [];
-      }
-    },
-  });
-
-  const handleTaskAdded = () => {
-    refetchTasks();
-    toast({
-      title: "Task Added",
-      description: "Your task has been successfully recorded.",
-    });
-  };
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
-    <DashboardProvider>
-      <Header />
+    <>
+      {!isLoading && dashboards.length === 0 && <OnboardingDialog />}
       <div className="container py-20">
         <Tabs defaultValue="dashboard" className="space-y-6">
           <div className="flex flex-col space-y-4 md:flex-row md:justify-between md:space-y-0">
@@ -174,6 +263,15 @@ const Index = () => {
         <QuickAddTask onTaskAdded={handleTaskAdded} />
         <FeedbackButton />
       </div>
+    </>
+  );
+};
+
+const Index = () => {
+  return (
+    <DashboardProvider>
+      <Header />
+      <IndexContent />
     </DashboardProvider>
   );
 };
