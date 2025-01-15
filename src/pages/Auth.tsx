@@ -82,18 +82,18 @@ const Auth = () => {
                 variables: {
                   default: {
                     colors: {
-                      brand: '#1E293B',
-                      brandAccent: '#334155',
+                      brand: '#3B82F6', // Using blue-500 to match the logo
+                      brandAccent: '#2563EB', // blue-600 for hover state
                     },
                   },
                 },
                 className: {
                   container: 'animate-fade-in',
-                  button: 'bg-primary hover:bg-primary/90',
+                  button: 'bg-blue-500 hover:bg-blue-600',
                   label: 'text-sm font-medium text-gray-700',
-                  input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary',
+                  input: 'mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm placeholder-gray-400 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500',
                   message: 'text-sm text-red-600',
-                  anchor: 'text-sm text-primary hover:text-primary/80 flex items-center gap-2',
+                  anchor: 'text-sm text-blue-500 hover:text-blue-600',
                 },
               }}
               providers={[]}
