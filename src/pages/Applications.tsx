@@ -112,13 +112,21 @@ const Applications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
+      // Create a new application object without the id
+      const { id, created_at, updated_at, ...cloneData } = applicationToClone;
+      
+      const newApplication = {
+        ...cloneData,
+        company_name: `${applicationToClone.company_name} (Copy)`,
+        application_date: new Date().toISOString().split('T')[0],
+        status: "To Apply" as const,
+        user_id: user.id,
+        dashboard_id: currentDashboard?.id || null,
+      };
+
       const { error } = await supabase
         .from('applications')
-        .insert([{
-          ...applicationToClone,
-          user_id: user.id,
-          dashboard_id: currentDashboard?.id || null,
-        }]);
+        .insert([newApplication]);
 
       if (error) throw error;
 
