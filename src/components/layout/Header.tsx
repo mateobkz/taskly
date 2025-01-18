@@ -4,7 +4,6 @@ import { Link } from "react-router-dom";
 import DashboardSelector from "../dashboard/DashboardSelector";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const { isLoading, currentDashboard } = useDashboard();
@@ -19,32 +18,27 @@ const Header = () => {
               <span className="text-xl font-semibold text-blue-500">Taskly</span>
             </Link>
             
-            <div className="flex items-center gap-4">
-              <Link to="/applications">
-                <Button variant="ghost">Applications</Button>
-              </Link>
-              {currentDashboard?.company_name && (
-                <>
-                  <div className="h-6 w-px bg-gray-200" />
-                  <div className="flex items-center gap-2">
-                    {currentDashboard.logo_url && (
-                      <img
-                        src={currentDashboard.logo_url}
-                        alt={currentDashboard.company_name}
-                        className="h-6 w-6 object-contain"
-                        onError={(e) => {
-                          e.currentTarget.src = "/placeholder.svg";
-                        }}
-                      />
-                    )}
-                    <span className="text-sm font-medium text-gray-600">
-                      {currentDashboard.company_name}
-                      {currentDashboard.position && ` - ${currentDashboard.position}`}
-                    </span>
-                  </div>
-                </>
-              )}
-            </div>
+            {currentDashboard?.company_name && (
+              <>
+                <div className="h-6 w-px bg-gray-200" />
+                <div className="flex items-center gap-2">
+                  {currentDashboard.logo_url && (
+                    <img
+                      src={currentDashboard.logo_url}
+                      alt={currentDashboard.company_name}
+                      className="h-6 w-6 object-contain"
+                      onError={(e) => {
+                        e.currentTarget.src = "/placeholder.svg";
+                      }}
+                    />
+                  )}
+                  <span className="text-sm font-medium text-gray-600">
+                    {currentDashboard.company_name}
+                    {currentDashboard.position && ` - ${currentDashboard.position}`}
+                  </span>
+                </div>
+              </>
+            )}
           </div>
           
           {isLoading ? (

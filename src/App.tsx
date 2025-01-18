@@ -4,6 +4,7 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
 import Applications from "./pages/Applications";
+import Lobby from "./pages/Lobby";
 import { DashboardProvider } from "./contexts/DashboardContext";
 
 function App() {
@@ -11,7 +12,7 @@ function App() {
     <Router>
       <DashboardProvider>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Lobby />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/tasks" element={<Tasks />} />
