@@ -112,14 +112,11 @@ const Applications = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Create a new application object without the id
+      // Create a new application object without the id and timestamps
       const { id, created_at, updated_at, ...cloneData } = applicationToClone;
       
       const newApplication = {
         ...cloneData,
-        company_name: `${applicationToClone.company_name} (Copy)`,
-        application_date: new Date().toISOString().split('T')[0],
-        status: "To Apply" as const,
         user_id: user.id,
         dashboard_id: currentDashboard?.id || null,
       };
