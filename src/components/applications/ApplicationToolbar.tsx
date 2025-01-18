@@ -49,7 +49,7 @@ const ApplicationToolbar = ({
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
+            <SelectItem value="all">All Statuses</SelectItem>
             <SelectItem value="To Apply">To Apply</SelectItem>
             <SelectItem value="Applied">Applied</SelectItem>
             <SelectItem value="Interview">Interview</SelectItem>
