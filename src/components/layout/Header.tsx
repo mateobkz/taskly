@@ -1,9 +1,10 @@
 import React from "react";
-import { Clipboard } from "lucide-react";
+import { Clipboard, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import DashboardSelector from "../dashboard/DashboardSelector";
 import { useDashboard } from "@/contexts/DashboardContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 
 const Header = () => {
   const { isLoading, currentDashboard } = useDashboard();
@@ -41,11 +42,18 @@ const Header = () => {
             )}
           </div>
           
-          {isLoading ? (
-            <Skeleton className="w-[280px] h-10" />
-          ) : (
-            <DashboardSelector />
-          )}
+          <div className="flex items-center gap-4">
+            {isLoading ? (
+              <Skeleton className="w-[280px] h-10" />
+            ) : (
+              <DashboardSelector />
+            )}
+            <Link to="/profile">
+              <Button variant="ghost" size="icon">
+                <User className="h-5 w-5" />
+              </Button>
+            </Link>
+          </div>
         </div>
       </div>
     </div>

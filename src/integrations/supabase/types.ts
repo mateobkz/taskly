@@ -228,6 +228,96 @@ export type Database = {
           },
         ]
       }
+      document_links: {
+        Row: {
+          application_id: number | null
+          created_at: string
+          document_id: number | null
+          id: number
+          task_id: number | null
+        }
+        Insert: {
+          application_id?: number | null
+          created_at?: string
+          document_id?: number | null
+          id?: number
+          task_id?: number | null
+        }
+        Update: {
+          application_id?: number | null
+          created_at?: string
+          document_id?: number | null
+          id?: number
+          task_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "document_links_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_links_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "document_links_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          category: Database["public"]["Enums"]["document_category"]
+          created_at: string
+          description: string | null
+          file_path: string
+          id: number
+          title: string
+          updated_at: string
+          user_id: string | null
+          version: number | null
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["document_category"]
+          created_at?: string
+          description?: string | null
+          file_path: string
+          id?: number
+          title: string
+          updated_at?: string
+          user_id?: string | null
+          version?: number | null
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["document_category"]
+          created_at?: string
+          description?: string | null
+          file_path?: string
+          id?: number
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+          version?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feedback: {
         Row: {
           category: string | null
@@ -502,6 +592,12 @@ export type Database = {
         | "Rejected"
         | "Withdrawn"
       difficulty_level: "Low" | "Medium" | "High"
+      document_category:
+        | "Resume"
+        | "Recommendation Letter"
+        | "Motivation Letter"
+        | "Certificate"
+        | "Other"
       task_priority: "Low" | "Medium" | "High"
       task_status: "Not Started" | "In Progress" | "Completed"
     }

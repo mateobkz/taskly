@@ -3,7 +3,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Dashboard from "@/components/Dashboard";
 import TaskForm from "@/components/TaskFormNew";
 import CalendarView from "@/components/calendar/CalendarView";
-import Profile from "@/pages/Profile";
 import Tasks from "@/pages/Tasks";
 import { Task } from "@/types/task";
 
@@ -42,12 +41,6 @@ const MainTabs = ({ tasks, onTaskAdded, refetchTasks }: MainTabsProps) => {
           >
             Add Task
           </TabsTrigger>
-          <TabsTrigger 
-            value="profile"
-            className="data-[state=active]:bg-blue-500 data-[state=active]:text-white"
-          >
-            Profile
-          </TabsTrigger>
         </TabsList>
       </div>
       
@@ -65,10 +58,6 @@ const MainTabs = ({ tasks, onTaskAdded, refetchTasks }: MainTabsProps) => {
       
       <TabsContent value="add-task">
         <TaskForm onTaskAdded={onTaskAdded} />
-      </TabsContent>
-
-      <TabsContent value="profile">
-        <Profile />
       </TabsContent>
     </Tabs>
   );
