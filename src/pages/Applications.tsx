@@ -14,6 +14,7 @@ import { Plus } from "lucide-react";
 import { useDashboard } from "@/contexts/DashboardContext";
 import ApplicationForm from "@/components/applications/ApplicationForm";
 import ApplicationRow from "@/components/applications/ApplicationRow";
+import ApplicationToolbar from "@/components/applications/ApplicationToolbar";
 import {
   Dialog,
   DialogContent,
@@ -23,9 +24,16 @@ import {
 
 const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
+  const [filteredApplications, setFilteredApplications] = useState<Application[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [selectedApplications, setSelectedApplications] = useState<number[]>([]);
+  const [filters, setFilters] = useState({
+    search: "",
+    status: "",
+  });
+  const [sortField, setSortField] = useState<string>("application_date");
   const { toast } = useToast();
   const { currentDashboard } = useDashboard();
 
@@ -47,6 +55,7 @@ const Applications = () => {
 
       if (error) throw error;
       setApplications(data as Application[]);
+      applyFiltersAndSort(data as Application[]);
     } catch (error) {
       console.error('Error fetching applications:', error);
       toast({
@@ -57,6 +66,39 @@ const Applications = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const applyFiltersAndSort = (data: Application[]) => {
+    let filtered = [...data];
+
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(app => 
+        app.company_name.toLowerCase().includes(searchLower) ||
+        app.position.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Apply status filter
+    if (filters.status) {
+      filtered = filtered.filter(app => app.status === filters.status);
+    }
+
+    // Apply sorting
+    filtered.sort((a, b) => {
+      switch (sortField) {
+        case 'company_name':
+          return a.company_name.localeCompare(b.company_name);
+        case 'status':
+          return a.status.localeCompare(b.status);
+        case 'application_date':
+        default:
+          return new Date(b.application_date).getTime() - new Date(a.application_date).getTime();
+      }
+    });
+
+    setFilteredApplications(filtered);
   };
 
   useEffect(() => {
@@ -83,6 +125,10 @@ const Applications = () => {
     };
   }, [currentDashboard?.id]);
 
+  useEffect(() => {
+    applyFiltersAndSort(applications);
+  }, [filters, sortField, applications]);
+
   const handleDelete = async (id: number) => {
     try {
       const { error } = await supabase
@@ -107,12 +153,83 @@ const Applications = () => {
     }
   };
 
+  const handleBulkDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .delete()
+        .in('id', selectedApplications);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Applications deleted successfully",
+      });
+      setSelectedApplications([]);
+      fetchApplications();
+    } catch (error) {
+      console.error('Error deleting applications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete applications",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkStatusChange = async (status: Application['status']) => {
+    try {
+      const { error } = await supabase
+        .from('applications')
+        .update({ status })
+        .in('id', selectedApplications);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Applications updated successfully",
+      });
+      setSelectedApplications([]);
+      fetchApplications();
+    } catch (error) {
+      console.error('Error updating applications:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update applications",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleBulkExport = () => {
+    const selectedData = applications.filter(app => selectedApplications.includes(app.id));
+    const csv = [
+      ['Company', 'Position', 'Location', 'Date', 'Status'].join(','),
+      ...selectedData.map(app => [
+        app.company_name,
+        app.position,
+        app.location || '',
+        app.application_date,
+        app.status
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = window.document.createElement('a');
+    a.href = url;
+    a.download = 'applications.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
   const handleClone = async (applicationToClone: Application) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
-      // Create a new application object without the id and timestamps
       const { id, created_at, updated_at, ...cloneData } = applicationToClone;
       
       const newApplication = {
@@ -167,10 +284,20 @@ const Applications = () => {
         </Button>
       </div>
 
+      <ApplicationToolbar
+        selectedApplications={selectedApplications}
+        onBulkDelete={handleBulkDelete}
+        onBulkExport={handleBulkExport}
+        onBulkStatusChange={handleBulkStatusChange}
+        onFilterChange={(field, value) => setFilters(prev => ({ ...prev, [field]: value }))}
+        onSortChange={setSortField}
+      />
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-[30px]"></TableHead>
               <TableHead>Company</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Location</TableHead>
@@ -180,7 +307,7 @@ const Applications = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {applications.map((app) => (
+            {filteredApplications.map((app) => (
               <ApplicationRow
                 key={app.id}
                 application={app}
@@ -193,6 +320,14 @@ const Applications = () => {
                 }}
                 onClone={handleClone}
                 getStatusColor={getStatusColor}
+                isSelected={selectedApplications.includes(app.id)}
+                onSelect={(id, selected) => {
+                  setSelectedApplications(prev => 
+                    selected 
+                      ? [...prev, id]
+                      : prev.filter(appId => appId !== id)
+                  );
+                }}
               />
             ))}
           </TableBody>

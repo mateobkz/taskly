@@ -4,7 +4,8 @@ import { TableCell, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Calendar, Copy, Edit, Trash2, Check, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar, Copy, Edit, Trash2, Check, X, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -22,6 +23,8 @@ interface ApplicationRowProps {
   onEdit: (application: Application) => void;
   onClone: (application: Application) => void;
   getStatusColor: (status: Application['status']) => string;
+  isSelected: boolean;
+  onSelect: (id: number, selected: boolean) => void;
 }
 
 const ApplicationRow = ({ 
@@ -29,7 +32,9 @@ const ApplicationRow = ({
   onDelete, 
   onEdit,
   onClone,
-  getStatusColor 
+  getStatusColor,
+  isSelected,
+  onSelect,
 }: ApplicationRowProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState(application);
@@ -74,6 +79,12 @@ const ApplicationRow = ({
   if (isEditing) {
     return (
       <TableRow>
+        <TableCell>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={(checked) => onSelect(application.id, checked as boolean)}
+          />
+        </TableCell>
         <TableCell>
           <Input
             value={editedData.company_name}
@@ -144,6 +155,12 @@ const ApplicationRow = ({
 
   return (
     <TableRow>
+      <TableCell>
+        <Checkbox
+          checked={isSelected}
+          onCheckedChange={(checked) => onSelect(application.id, checked as boolean)}
+        />
+      </TableCell>
       <TableCell className="font-medium">{application.company_name}</TableCell>
       <TableCell>{application.position}</TableCell>
       <TableCell>{application.location}</TableCell>
@@ -180,6 +197,13 @@ const ApplicationRow = ({
             onClick={() => onDelete(application.id)}
           >
             <Trash2 className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {/* TODO: Implement document attachment dialog */}}
+          >
+            <FileText className="h-4 w-4" />
           </Button>
         </div>
       </TableCell>
