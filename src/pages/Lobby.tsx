@@ -36,7 +36,7 @@ const Lobby = () => {
             </Card>
           </Link>
 
-          <Link to="/tasks" className="block">
+          <Link to="/dashboard" className="block">
             <Card className="h-full hover:shadow-lg transition-shadow">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">

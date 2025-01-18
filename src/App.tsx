@@ -13,6 +13,7 @@ function App() {
       <DashboardProvider>
         <Routes>
           <Route path="/" element={<Lobby />} />
+          <Route path="/dashboard" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/tasks" element={<Tasks />} />
