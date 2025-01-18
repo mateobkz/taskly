@@ -9,6 +9,68 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      application_tag_relations: {
+        Row: {
+          application_id: number
+          tag_id: number
+        }
+        Insert: {
+          application_id: number
+          tag_id: number
+        }
+        Update: {
+          application_id?: number
+          tag_id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_tag_relations_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "application_tag_relations_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "application_tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      application_tags: {
+        Row: {
+          color: string
+          created_at: string | null
+          id: number
+          name: string
+          user_id: string | null
+        }
+        Insert: {
+          color?: string
+          created_at?: string | null
+          id?: number
+          name: string
+          user_id?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          id?: number
+          name?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_tags_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_date: string | null
@@ -18,10 +80,12 @@ export type Database = {
           created_at: string | null
           dashboard_id: number | null
           id: number
+          last_reminder_sent: string | null
           location: string | null
           next_step: string | null
           notes: string | null
           position: string
+          reminder_date: string | null
           status: Database["public"]["Enums"]["application_status"] | null
           updated_at: string | null
           user_id: string | null
@@ -34,10 +98,12 @@ export type Database = {
           created_at?: string | null
           dashboard_id?: number | null
           id?: number
+          last_reminder_sent?: string | null
           location?: string | null
           next_step?: string | null
           notes?: string | null
           position: string
+          reminder_date?: string | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
           user_id?: string | null
@@ -50,10 +116,12 @@ export type Database = {
           created_at?: string | null
           dashboard_id?: number | null
           id?: number
+          last_reminder_sent?: string | null
           location?: string | null
           next_step?: string | null
           notes?: string | null
           position?: string
+          reminder_date?: string | null
           status?: Database["public"]["Enums"]["application_status"] | null
           updated_at?: string | null
           user_id?: string | null

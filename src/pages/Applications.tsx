@@ -6,16 +6,14 @@ import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
-  TableCell,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Edit, Plus, Trash } from "lucide-react";
-import { format } from "date-fns";
+import { Plus } from "lucide-react";
 import { useDashboard } from "@/contexts/DashboardContext";
 import ApplicationForm from "@/components/applications/ApplicationForm";
+import ApplicationRow from "@/components/applications/ApplicationRow";
 import {
   Dialog,
   DialogContent,
@@ -64,7 +62,6 @@ const Applications = () => {
   useEffect(() => {
     fetchApplications();
 
-    // Set up real-time subscription
     const channel = supabase
       .channel('applications-changes')
       .on(
@@ -110,6 +107,36 @@ const Applications = () => {
     }
   };
 
+  const handleClone = async (applicationToClone: Application) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from('applications')
+        .insert([{
+          ...applicationToClone,
+          user_id: user.id,
+          dashboard_id: currentDashboard?.id || null,
+        }]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Application cloned successfully",
+      });
+      fetchApplications();
+    } catch (error) {
+      console.error('Error cloning application:', error);
+      toast({
+        title: "Error",
+        description: "Failed to clone application",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getStatusColor = (status: Application['status']) => {
     const colors = {
       'To Apply': 'bg-gray-500',
@@ -149,43 +176,19 @@ const Applications = () => {
           </TableHeader>
           <TableBody>
             {applications.map((app) => (
-              <TableRow key={app.id}>
-                <TableCell className="font-medium">{app.company_name}</TableCell>
-                <TableCell>{app.position}</TableCell>
-                <TableCell>{app.location}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    {format(new Date(app.application_date), 'MMM d, yyyy')}
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Badge className={`${getStatusColor(app.status)} text-white`}>
-                    {app.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedApplication(app);
-                        setIsFormOpen(true);
-                      }}
-                    >
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(app.id)}
-                    >
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+              <ApplicationRow
+                key={app.id}
+                application={app}
+                onDelete={handleDelete}
+                onEdit={(updatedApp) => {
+                  const updatedApps = applications.map(a => 
+                    a.id === updatedApp.id ? updatedApp : a
+                  );
+                  setApplications(updatedApps);
+                }}
+                onClone={handleClone}
+                getStatusColor={getStatusColor}
+              />
             ))}
           </TableBody>
         </Table>
