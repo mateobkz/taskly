@@ -4,17 +4,20 @@ import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
 import Applications from "./pages/Applications";
+import { DashboardProvider } from "./contexts/DashboardContext";
 
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        <Route path="/auth" element={<Auth />} />
-        <Route path="/profile" element={<Profile />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/applications" element={<Applications />} />
-      </Routes>
+      <DashboardProvider>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/applications" element={<Applications />} />
+        </Routes>
+      </DashboardProvider>
     </Router>
   );
 }
