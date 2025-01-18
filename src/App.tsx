@@ -3,6 +3,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Profile from "./pages/Profile";
 import Tasks from "./pages/Tasks";
+import Applications from "./pages/Applications";
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/auth" element={<Auth />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/tasks" element={<Tasks />} />
+        <Route path="/applications" element={<Applications />} />
       </Routes>
     </Router>
   );

@@ -9,6 +9,72 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      applications: {
+        Row: {
+          application_date: string | null
+          application_url: string | null
+          company_name: string
+          contact_person: string | null
+          created_at: string | null
+          dashboard_id: number | null
+          id: number
+          location: string | null
+          next_step: string | null
+          notes: string | null
+          position: string
+          status: Database["public"]["Enums"]["application_status"] | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          application_date?: string | null
+          application_url?: string | null
+          company_name: string
+          contact_person?: string | null
+          created_at?: string | null
+          dashboard_id?: number | null
+          id?: number
+          location?: string | null
+          next_step?: string | null
+          notes?: string | null
+          position: string
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          application_date?: string | null
+          application_url?: string | null
+          company_name?: string
+          contact_person?: string | null
+          created_at?: string | null
+          dashboard_id?: number | null
+          id?: number
+          location?: string | null
+          next_step?: string | null
+          notes?: string | null
+          position?: string
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "dashboards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       badges: {
         Row: {
           category: string
@@ -360,6 +426,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      application_status:
+        | "To Apply"
+        | "Applied"
+        | "Interview"
+        | "Offer"
+        | "Rejected"
+        | "Withdrawn"
       difficulty_level: "Low" | "Medium" | "High"
       task_priority: "Low" | "Medium" | "High"
       task_status: "Not Started" | "In Progress" | "Completed"
