@@ -46,10 +46,17 @@ const ApplicationForm = ({ initialData, onSubmit }: ApplicationFormProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("No user found");
 
+      // Ensure required fields are present
+      if (!formData.company_name || !formData.position) {
+        throw new Error("Company name and position are required");
+      }
+
       const applicationData = {
         ...formData,
         user_id: user.id,
         dashboard_id: currentDashboard?.id || null,
+        company_name: formData.company_name,
+        position: formData.position,
       };
 
       if (initialData) {
@@ -76,7 +83,7 @@ const ApplicationForm = ({ initialData, onSubmit }: ApplicationFormProps) => {
       console.error('Error submitting application:', error);
       toast({
         title: "Error",
-        description: `Failed to ${initialData ? 'update' : 'add'} application`,
+        description: error instanceof Error ? error.message : `Failed to ${initialData ? 'update' : 'add'} application`,
         variant: "destructive",
       });
     } finally {
@@ -88,7 +95,7 @@ const ApplicationForm = ({ initialData, onSubmit }: ApplicationFormProps) => {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="company_name">Company Name</Label>
+          <Label htmlFor="company_name">Company Name *</Label>
           <Input
             id="company_name"
             value={formData.company_name || ""}
@@ -100,7 +107,7 @@ const ApplicationForm = ({ initialData, onSubmit }: ApplicationFormProps) => {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="position">Position</Label>
+          <Label htmlFor="position">Position *</Label>
           <Input
             id="position"
             value={formData.position || ""}
