@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Document, DocumentCategory } from "@/types/document";
 import DocumentSection from "@/components/profile/DocumentSection";
+import ProfileInfo from "@/components/profile/ProfileInfo";
 import PreferencesSection from "@/components/profile/PreferencesSection";
 
 const Profile = () => {
@@ -84,7 +82,7 @@ const Profile = () => {
     }
   };
 
-  const handleUpdate = async () => {
+  const handleProfileUpdate = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -153,16 +151,11 @@ const Profile = () => {
 
       if (error) throw error;
 
-      // Create a URL for the downloaded file
       const url = window.URL.createObjectURL(data);
-      
-      // Create an anchor element to trigger the download
       const a = window.document.createElement('a');
       a.href = url;
       a.download = document.title;
       a.click();
-      
-      // Clean up by revoking the URL
       window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
@@ -215,43 +208,11 @@ const Profile = () => {
       </Button>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white/50 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Full Name</label>
-              <Input
-                value={profile.full_name || ''}
-                onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                placeholder="Enter your full name"
-              />
-            </div>
-            
-            <div>
-              <label className="text-sm font-medium">Company</label>
-              <Input
-                value={profile.company_name || ''}
-                onChange={(e) => setProfile(prev => ({ ...prev, company_name: e.target.value }))}
-                placeholder="Current company"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium">Position</label>
-              <Input
-                value={profile.position || ''}
-                onChange={(e) => setProfile(prev => ({ ...prev, position: e.target.value }))}
-                placeholder="Current position"
-              />
-            </div>
-
-            <Button onClick={handleUpdate} className="w-full">
-              Update Profile
-            </Button>
-          </CardContent>
-        </Card>
+        <ProfileInfo
+          profile={profile}
+          onUpdate={(field, value) => setProfile(prev => ({ ...prev, [field]: value }))}
+          onSave={handleProfileUpdate}
+        />
 
         <PreferencesSection
           preferences={{
