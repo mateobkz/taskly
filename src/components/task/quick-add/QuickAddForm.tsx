@@ -50,6 +50,8 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
   }, []);
 
   const handleNLPProcess = async (userResponse?: string) => {
+    console.log("Starting NLP process with input:", userResponse || nlpInput);
+    
     if (!nlpInput.trim() && !userResponse) {
       toast({
         title: "Error",
@@ -62,7 +64,15 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
     setProcessingNLP(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      console.log("Current user:", user);
+      
       if (!user) throw new Error("User not authenticated");
+
+      console.log("Calling parse-task function with:", {
+        taskDescription: userResponse || nlpInput,
+        userId: user.id,
+        isInitialRequest: !userResponse
+      });
 
       const { data, error } = await supabase.functions.invoke('parse-task', {
         body: { 
@@ -72,14 +82,18 @@ const QuickAddForm = ({ onTaskAdded }: QuickAddFormProps) => {
         },
       });
 
+      console.log("Parse task response:", { data, error });
+
       if (error) throw error;
 
       if (data.needsClarification) {
+        console.log("Clarification needed:", data.question);
         setClarificationNeeded(true);
         setClarificationQuestion(data.question);
         setClarificationReasoning(data.reasoning);
         setShowPreview(false);
       } else {
+        console.log("Task parsed successfully:", data.parsedTask);
         const { parsedTask } = data;
         setFormData(prev => ({
           ...prev,
