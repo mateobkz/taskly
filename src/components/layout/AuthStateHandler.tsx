@@ -9,37 +9,58 @@ const AuthStateHandler = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      console.log("Checking auth session:", session);
-      
-      if (error) {
-        console.error("Auth session error:", error);
-        toast({
-          title: "Session Error",
-          description: "Please sign in again",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        console.log("Checking auth session:", session);
+        
+        if (error) {
+          console.error("Auth session error:", error);
+          // Clear any stale session data
+          await supabase.auth.signOut();
+          toast({
+            title: "Session Error",
+            description: "Please sign in again",
+            variant: "destructive",
+          });
+          navigate("/auth");
+          return;
+        }
 
-      if (!session) {
-        console.log("No active session, redirecting to auth");
+        if (!session) {
+          console.log("No active session, redirecting to auth");
+          navigate("/auth");
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
         navigate("/auth");
       }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event, session);
       
       if (event === 'TOKEN_REFRESHED') {
         console.log("Token refreshed successfully");
       }
 
-      if (event === 'SIGNED_OUT') {
-        console.log("User signed out, redirecting to auth");
+      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        console.log("User signed out or deleted, redirecting to auth");
+        // Clear any local session data
+        localStorage.removeItem('supabase.auth.token');
+        navigate("/auth");
+      }
+
+      // Handle refresh token errors
+      if (event === 'TOKEN_REFRESH_FAILED') {
+        console.error("Token refresh failed");
+        toast({
+          title: "Session Expired",
+          description: "Please sign in again",
+          variant: "destructive",
+        });
+        await supabase.auth.signOut();
         navigate("/auth");
       }
     });
