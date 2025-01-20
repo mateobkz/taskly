@@ -3,13 +3,13 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { PlusCircle, Trash2, Upload, ArrowLeft, FileText, Download } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Document, DocumentCategory } from "@/types/document";
+import DocumentSection from "@/components/profile/DocumentSection";
+import PreferencesSection from "@/components/profile/PreferencesSection";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -24,7 +24,6 @@ const Profile = () => {
     preferred_learning_style: "",
     skills: [] as string[],
   });
-  const [newSkill, setNewSkill] = useState("");
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
@@ -114,32 +113,11 @@ const Profile = () => {
     }
   };
 
-  const handleAddSkill = () => {
-    if (newSkill.trim() && !profile.skills.includes(newSkill.trim())) {
-      setProfile(prev => ({
-        ...prev,
-        skills: [...prev.skills, newSkill.trim()],
-      }));
-      setNewSkill("");
-    }
-  };
-
-  const handleRemoveSkill = (skillToRemove: string) => {
-    setProfile(prev => ({
-      ...prev,
-      skills: prev.skills.filter(skill => skill !== skillToRemove),
-    }));
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, category: DocumentCategory) => {
+  const handleFileUpload = async (file: File, category: DocumentCategory) => {
     try {
-      const file = event.target.files?.[0];
-      if (!file) return;
-
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Upload file to storage
       const fileExt = file.name.split('.').pop();
       const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
@@ -149,7 +127,6 @@ const Profile = () => {
 
       if (uploadError) throw uploadError;
 
-      // Create document record
       const { error: dbError } = await supabase
         .from('documents')
         .insert({
@@ -161,19 +138,10 @@ const Profile = () => {
 
       if (dbError) throw dbError;
 
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
-
       fetchDocuments();
     } catch (error) {
       console.error('Error uploading document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload document",
-        variant: "destructive",
-      });
+      throw error;
     }
   };
 
@@ -186,18 +154,14 @@ const Profile = () => {
       if (error) throw error;
 
       const url = URL.createObjectURL(data);
-      const a = window.document.createElement('a');
+      const a = document.createElement('a');
       a.href = url;
       a.download = document.title;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to download document",
-        variant: "destructive",
-      });
+      throw error;
     }
   };
 
@@ -206,14 +170,12 @@ const Profile = () => {
       const document = documents.find(d => d.id === id);
       if (!document) return;
 
-      // Delete file from storage
       const { error: storageError } = await supabase.storage
         .from('documents')
         .remove([document.file_path]);
 
       if (storageError) throw storageError;
 
-      // Delete document record
       const { error: dbError } = await supabase
         .from('documents')
         .delete()
@@ -221,19 +183,10 @@ const Profile = () => {
 
       if (dbError) throw dbError;
 
-      toast({
-        title: "Success",
-        description: "Document deleted successfully",
-      });
-
       fetchDocuments();
     } catch (error) {
       console.error('Error deleting document:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete document",
-        variant: "destructive",
-      });
+      throw error;
     }
   };
 
@@ -246,169 +199,88 @@ const Profile = () => {
   }
 
   return (
-    <div className="container max-w-4xl py-8">
+    <div className="container max-w-6xl py-8 space-y-6 animate-fade-in">
       <Button 
         variant="ghost" 
-        className="mb-4"
         onClick={() => navigate(-1)}
+        className="mb-4"
       >
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back
       </Button>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="personal" className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="personal">Personal Info</TabsTrigger>
-              <TabsTrigger value="professional">Professional</TabsTrigger>
-              <TabsTrigger value="documents">Documents</TabsTrigger>
-            </TabsList>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Card className="bg-white/50 backdrop-blur-sm">
+          <CardHeader>
+            <CardTitle>Personal Information</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Full Name</label>
+              <Input
+                value={profile.full_name || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
+                placeholder="Enter your full name"
+              />
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium">Company</label>
+              <Input
+                value={profile.company_name || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, company_name: e.target.value }))}
+                placeholder="Current company"
+              />
+            </div>
 
-            <TabsContent value="personal" className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Full Name</label>
-                <Input
-                  value={profile.full_name || ''}
-                  onChange={(e) => setProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                  placeholder="Enter your full name"
-                />
-              </div>
-              
-              <div>
-                <label className="text-sm font-medium">Bio</label>
-                <Textarea
-                  value={profile.bio || ''}
-                  onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
-                  placeholder="Tell us about yourself"
-                  className="h-24"
-                />
-              </div>
+            <div>
+              <label className="text-sm font-medium">Position</label>
+              <Input
+                value={profile.position || ''}
+                onChange={(e) => setProfile(prev => ({ ...prev, position: e.target.value }))}
+                placeholder="Current position"
+              />
+            </div>
 
-              <div>
-                <label className="text-sm font-medium">Learning Goals</label>
-                <Textarea
-                  value={profile.learning_goals || ''}
-                  onChange={(e) => setProfile(prev => ({ ...prev, learning_goals: e.target.value }))}
-                  placeholder="What do you want to learn?"
-                  className="h-24"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="professional" className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Skills</label>
-                <div className="flex gap-2 mb-2">
-                  <Input
-                    value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
-                    placeholder="Add a skill"
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddSkill()}
-                  />
-                  <Button onClick={handleAddSkill} size="icon">
-                    <PlusCircle className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {profile.skills.map((skill, index) => (
-                    <Badge
-                      key={index}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {skill}
-                      <Trash2
-                        className="h-3 w-3 cursor-pointer hover:text-red-500"
-                        onClick={() => handleRemoveSkill(skill)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Preferred Learning Style</label>
-                <Input
-                  value={profile.preferred_learning_style || ''}
-                  onChange={(e) => setProfile(prev => ({ ...prev, preferred_learning_style: e.target.value }))}
-                  placeholder="How do you learn best?"
-                />
-              </div>
-            </TabsContent>
-
-            <TabsContent value="documents" className="space-y-4">
-              {(['Resume', 'Recommendation Letter', 'Motivation Letter', 'Certificate', 'Other'] as DocumentCategory[]).map((category) => (
-                <Card key={category}>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center justify-between">
-                      <span>{category}s</span>
-                      <div className="relative">
-                        <Input
-                          type="file"
-                          className="hidden"
-                          id={`file-upload-${category}`}
-                          onChange={(e) => handleFileUpload(e, category)}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => document.getElementById(`file-upload-${category}`)?.click()}
-                        >
-                          <Upload className="h-4 w-4 mr-2" />
-                          Upload
-                        </Button>
-                      </div>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {documents
-                        .filter(doc => doc.category === category)
-                        .map(document => (
-                          <div
-                            key={document.id}
-                            className="flex items-center justify-between p-2 rounded-lg border"
-                          >
-                            <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-blue-500" />
-                              <span>{document.title}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDownload(document)}
-                              >
-                                <Download className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteDocument(document.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-red-500" />
-                              </Button>
-                            </div>
-                          </div>
-                        ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </TabsContent>
-          </Tabs>
-
-          <div className="mt-6">
             <Button onClick={handleUpdate} className="w-full">
               Update Profile
             </Button>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+
+        <PreferencesSection
+          preferences={{
+            learning_goals: profile.learning_goals,
+            preferred_learning_style: profile.preferred_learning_style,
+            skills: profile.skills,
+          }}
+          onUpdate={(field, value) => setProfile(prev => ({ ...prev, [field]: value }))}
+          onAddSkill={(skill) => setProfile(prev => ({
+            ...prev,
+            skills: [...prev.skills, skill]
+          }))}
+          onRemoveSkill={(skillToRemove) => setProfile(prev => ({
+            ...prev,
+            skills: prev.skills.filter(skill => skill !== skillToRemove)
+          }))}
+        />
+      </div>
+
+      <div className="space-y-6">
+        <h2 className="text-2xl font-bold">Documents</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {(['Resume', 'Recommendation Letter', 'Motivation Letter', 'Certificate'] as DocumentCategory[]).map((category) => (
+            <DocumentSection
+              key={category}
+              category={category}
+              documents={documents}
+              onUpload={handleFileUpload}
+              onDelete={handleDeleteDocument}
+              onDownload={handleDownload}
+            />
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
