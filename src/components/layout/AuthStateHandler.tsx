@@ -45,16 +45,16 @@ const AuthStateHandler = () => {
         console.log("Token refreshed successfully");
       }
 
-      if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
-        console.log("User signed out or deleted, redirecting to auth");
+      if (event === 'SIGNED_OUT') {
+        console.log("User signed out, redirecting to auth");
         // Clear any local session data
         localStorage.removeItem('supabase.auth.token');
         navigate("/auth");
       }
 
-      // Handle refresh token errors
-      if (event === 'TOKEN_REFRESH_FAILED') {
-        console.error("Token refresh failed");
+      // Handle session expiration
+      if (!session) {
+        console.log("Session expired or invalid");
         toast({
           title: "Session Expired",
           description: "Please sign in again",
