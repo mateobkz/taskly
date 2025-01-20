@@ -497,6 +497,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          ai_suggestions: Json | null
           created_at: string
           dashboard_id: number | null
           date_completed: string
@@ -511,13 +512,17 @@ export type Database = {
           priority: string | null
           recurrence_end_date: string | null
           recurrence_frequency: string | null
+          related_company: string | null
+          related_position: string | null
           skills_acquired: string
           status: string | null
+          subtasks: Json | null
           title: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          ai_suggestions?: Json | null
           created_at?: string
           dashboard_id?: number | null
           date_completed: string
@@ -532,13 +537,17 @@ export type Database = {
           priority?: string | null
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
+          related_company?: string | null
+          related_position?: string | null
           skills_acquired: string
           status?: string | null
+          subtasks?: Json | null
           title: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          ai_suggestions?: Json | null
           created_at?: string
           dashboard_id?: number | null
           date_completed?: string
@@ -553,8 +562,11 @@ export type Database = {
           priority?: string | null
           recurrence_end_date?: string | null
           recurrence_frequency?: string | null
+          related_company?: string | null
+          related_position?: string | null
           skills_acquired?: string
           status?: string | null
+          subtasks?: Json | null
           title?: string
           updated_at?: string
           user_id?: string | null

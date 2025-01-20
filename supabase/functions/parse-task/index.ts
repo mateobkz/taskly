@@ -30,6 +30,18 @@ serve(async (req) => {
       throw new Error('Task description is required');
     }
 
+    // Fetch user profile data for context
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (profileError) {
+      console.error('Error fetching profile:', profileError);
+      throw new Error('Failed to fetch user context');
+    }
+
     const { data: recentTasks, error: tasksError } = await supabase
       .from('tasks')
       .select('*')
@@ -45,11 +57,23 @@ serve(async (req) => {
     const recentTasksContext = recentTasks?.map(task => ({
       title: task.title,
       skills: task.skills_acquired,
-      difficulty: task.difficulty
+      difficulty: task.difficulty,
+      company: task.related_company,
+      position: task.related_position
     }));
+
+    // Extract company and position from task description if possible
+    const companyMatch = taskDescription.match(/(?:at|for|with)\s+([A-Z][A-Za-z\s]+?)(?:\s+(?:as|for|position)|[.,]|$)/);
+    const positionMatch = taskDescription.match(/(?:as|position|role)\s+(?:a|an)?\s+([A-Z][A-Za-z\s]+?)(?:\s+(?:at|for|with)|[.,]|$)/);
 
     const systemPrompt = isInitialRequest ? 
       `You are a task analysis assistant that helps optimize task descriptions and ensures they align with the user's learning journey. 
+      User Profile Context:
+      - Current Position: ${profile.position || 'Not specified'}
+      - Company: ${profile.company_name || 'Not specified'}
+      - Skills: ${profile.skills?.join(', ') || 'Not specified'}
+      - Learning Goals: ${profile.learning_goals || 'Not specified'}
+      
       Recent tasks context: ${JSON.stringify(recentTasksContext)}
       
       If you need clarification, respond with a JSON object containing:
@@ -70,7 +94,15 @@ serve(async (req) => {
           "difficulty": "Low/Medium/High",
           "skills_acquired": "Comma-separated list",
           "key_insights": "Combined insights including both challenges and takeaways",
-          "duration_minutes": 30
+          "duration_minutes": 30,
+          "related_company": "Extracted company name if relevant",
+          "related_position": "Extracted position if relevant",
+          "subtasks": ["Array of suggested subtasks based on the main task"],
+          "ai_suggestions": {
+            "recommended_skills": ["Skills that would be valuable to learn based on this task"],
+            "next_steps": ["Suggested follow-up tasks or actions"],
+            "resources": ["Recommended learning resources or tools"]
+          }
         }
       }
 
@@ -120,6 +152,16 @@ serve(async (req) => {
     try {
       parsedResponse = JSON.parse(data.choices[0].message.content.trim());
       console.log('Successfully parsed response:', parsedResponse);
+
+      // If we have a valid task, enhance it with extracted metadata
+      if (!parsedResponse.needsClarification && parsedResponse.parsedTask) {
+        if (companyMatch && !parsedResponse.parsedTask.related_company) {
+          parsedResponse.parsedTask.related_company = companyMatch[1].trim();
+        }
+        if (positionMatch && !parsedResponse.parsedTask.related_position) {
+          parsedResponse.parsedTask.related_position = positionMatch[1].trim();
+        }
+      }
     } catch (error) {
       console.error('Error parsing OpenAI response as JSON:', error);
       console.log('Raw response content:', data.choices[0].message.content);

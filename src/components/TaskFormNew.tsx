@@ -25,12 +25,16 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
     difficulty: initialData?.difficulty || "",
     key_challenges: initialData?.key_challenges || "",
     key_takeaways: initialData?.key_takeaways || "",
-    key_insights: initialData?.key_insights || "", // Added this field explicitly
+    key_insights: initialData?.key_insights || "",
     duration_minutes: initialData?.duration_minutes || 0,
     user_id: initialData?.user_id || null,
+    related_company: initialData?.related_company || "",
+    related_position: initialData?.related_position || "",
+    subtasks: initialData?.subtasks || [],
+    ai_suggestions: initialData?.ai_suggestions || {},
   });
 
-  console.log("Initial data received:", initialData); // Debug log
+  console.log("Initial data received:", initialData);
 
   useEffect(() => {
     const setUserId = async () => {
@@ -114,6 +118,10 @@ const TaskForm = ({ onTaskAdded, initialData, isEditing = false }: TaskFormProps
           key_insights: "",
           duration_minutes: 0,
           user_id: formData.user_id,
+          related_company: "",
+          related_position: "",
+          subtasks: [],
+          ai_suggestions: {},
         });
       }
     } catch (error) {
