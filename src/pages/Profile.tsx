@@ -153,12 +153,17 @@ const Profile = () => {
 
       if (error) throw error;
 
-      const url = URL.createObjectURL(data);
-      const a = document.createElement('a');
+      // Create a URL for the downloaded file
+      const url = window.URL.createObjectURL(data);
+      
+      // Create an anchor element to trigger the download
+      const a = window.document.createElement('a');
       a.href = url;
       a.download = document.title;
       a.click();
-      URL.revokeObjectURL(url);
+      
+      // Clean up by revoking the URL
+      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error downloading document:', error);
       throw error;
