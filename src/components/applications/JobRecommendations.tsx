@@ -54,7 +54,7 @@ const JobRecommendations = () => {
   });
 
   // Query for user's feedback history
-  const { data: feedbackHistory } = useQuery({
+  const { data: feedbackHistory, refetch: refetchFeedback } = useQuery({
     queryKey: ['jobFeedback'],
     queryFn: async () => {
       try {
@@ -119,8 +119,8 @@ const JobRecommendations = () => {
 
       if (error) throw error;
 
-      // Refresh recommendations after feedback
-      await refetch();
+      // Refresh both feedback history and recommendations
+      await Promise.all([refetchFeedback(), refetch()]);
 
       toast({
         title: "Feedback Recorded",

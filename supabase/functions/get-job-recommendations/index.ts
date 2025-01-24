@@ -45,14 +45,26 @@ serve(async (req) => {
         .map(f => f.role.toLowerCase())
     );
     
+    const dislikedRoles = new Set(
+      feedbackHistory
+        ?.filter(f => !f.feedback)
+        .map(f => f.role.toLowerCase())
+    );
+    
     const likedCompanies = new Set(
       feedbackHistory
         ?.filter(f => f.feedback)
         .map(f => f.company.toLowerCase())
     );
 
-    // Generate base recommendations
-    const baseRecommendations = [
+    const dislikedCompanies = new Set(
+      feedbackHistory
+        ?.filter(f => !f.feedback)
+        .map(f => f.company.toLowerCase())
+    );
+
+    // Generate base recommendations with more variety
+    const allRecommendations = [
       {
         role: "Software Engineer",
         companies: ["Google", "Microsoft", "Amazon"],
@@ -79,39 +91,77 @@ serve(async (req) => {
           { company: "Square", url: "https://careers.squareup.com/us/en" },
           { company: "Shopify", url: "https://www.shopify.com/careers" }
         ]
+      },
+      {
+        role: "Backend Engineer",
+        companies: ["LinkedIn", "Twitter", "Uber"],
+        jobLinks: [
+          { company: "LinkedIn", url: "https://careers.linkedin.com/" },
+          { company: "Twitter", url: "https://careers.twitter.com/" },
+          { company: "Uber", url: "https://www.uber.com/us/en/careers/" }
+        ]
+      },
+      {
+        role: "DevOps Engineer",
+        companies: ["GitLab", "Docker", "HashiCorp"],
+        jobLinks: [
+          { company: "GitLab", url: "https://about.gitlab.com/jobs/" },
+          { company: "Docker", url: "https://www.docker.com/careers/" },
+          { company: "HashiCorp", url: "https://www.hashicorp.com/jobs" }
+        ]
       }
     ];
 
-    // Customize recommendations based on profile and feedback
-    const recommendations = baseRecommendations.map(rec => {
-      // Prioritize recommendations similar to liked roles/companies
-      const relevanceScore = 
-        (likedRoles.has(rec.role.toLowerCase()) ? 2 : 0) +
-        rec.companies.reduce((score, company) => 
-          score + (likedCompanies.has(company.toLowerCase()) ? 1 : 0), 0);
-
-      return {
-        ...rec,
-        reasoning: `Based on your profile${profile?.position ? ` as a ${profile.position}` : ''} and your feedback history, 
-                   this role aligns with your interests${relevanceScore > 0 ? ' and previous preferences' : ''}.`,
-        skillsToHighlight: [
-          ...(profile?.skills?.slice(0, 3) || ["JavaScript", "React", "TypeScript"]),
-          "Problem Solving",
-          "Communication"
-        ],
-        skillsToDevelope: [
-          "System Design",
-          "Cloud Architecture",
-          "Team Leadership",
-          "Technical Architecture"
-        ]
-      };
-    }).sort((a, b) => {
-      // Sort by relevance to user's preferences
-      const scoreA = likedRoles.has(a.role.toLowerCase()) ? 2 : 0;
-      const scoreB = likedRoles.has(b.role.toLowerCase()) ? 2 : 0;
-      return scoreB - scoreA;
+    // Filter out disliked roles and companies
+    let filteredRecommendations = allRecommendations.filter(rec => {
+      const isRoleDisliked = dislikedRoles.has(rec.role.toLowerCase());
+      const areAllCompaniesDisliked = rec.companies.every(company => 
+        dislikedCompanies.has(company.toLowerCase())
+      );
+      return !isRoleDisliked && !areAllCompaniesDisliked;
     });
+
+    // If no recommendations left after filtering, reset to all recommendations
+    if (filteredRecommendations.length === 0) {
+      filteredRecommendations = allRecommendations;
+    }
+
+    // Score and sort recommendations based on likes
+    const scoredRecommendations = filteredRecommendations.map(rec => {
+      let score = 0;
+      
+      // Add points for liked roles
+      if (likedRoles.has(rec.role.toLowerCase())) {
+        score += 3;
+      }
+      
+      // Add points for each liked company
+      rec.companies.forEach(company => {
+        if (likedCompanies.has(company.toLowerCase())) {
+          score += 1;
+        }
+      });
+      
+      return { ...rec, score };
+    }).sort((a, b) => b.score - a.score);
+
+    // Take top 3 recommendations and add context
+    const recommendations = scoredRecommendations.slice(0, 3).map(rec => ({
+      ...rec,
+      reasoning: `Based on your profile${profile?.position ? ` as a ${profile.position}` : ''} and your feedback history, 
+                 this role aligns with your interests${rec.score > 0 ? ' and previous preferences' : ''}.`,
+      skillsToHighlight: [
+        ...(profile?.skills?.slice(0, 3) || ["JavaScript", "React", "TypeScript"]),
+        "Problem Solving",
+        "Communication"
+      ],
+      skillsToDevelope: [
+        "System Design",
+        "Cloud Architecture",
+        "Team Leadership",
+        "Technical Architecture"
+      ]
+    }));
 
     console.log('Generated recommendations:', recommendations);
 
