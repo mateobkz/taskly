@@ -21,6 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import JobRecommendations from "@/components/applications/JobRecommendations";
 
 const Applications = () => {
   const [applications, setApplications] = useState<Application[]>([]);
@@ -284,54 +285,62 @@ const Applications = () => {
         </Button>
       </div>
 
-      <ApplicationToolbar
-        selectedApplications={selectedApplications}
-        onBulkDelete={handleBulkDelete}
-        onBulkExport={handleBulkExport}
-        onBulkStatusChange={handleBulkStatusChange}
-        onFilterChange={(field, value) => setFilters(prev => ({ ...prev, [field]: value }))}
-        onSortChange={setSortField}
-      />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 space-y-6">
+          <ApplicationToolbar
+            selectedApplications={selectedApplications}
+            onBulkDelete={handleBulkDelete}
+            onBulkExport={handleBulkExport}
+            onBulkStatusChange={handleBulkStatusChange}
+            onFilterChange={(field, value) => setFilters(prev => ({ ...prev, [field]: value }))}
+            onSortChange={setSortField}
+          />
 
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[30px]"></TableHead>
-              <TableHead>Company</TableHead>
-              <TableHead>Position</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredApplications.map((app) => (
-              <ApplicationRow
-                key={app.id}
-                application={app}
-                onDelete={handleDelete}
-                onEdit={(updatedApp) => {
-                  const updatedApps = applications.map(a => 
-                    a.id === updatedApp.id ? updatedApp : a
-                  );
-                  setApplications(updatedApps);
-                }}
-                onClone={handleClone}
-                getStatusColor={getStatusColor}
-                isSelected={selectedApplications.includes(app.id)}
-                onSelect={(id, selected) => {
-                  setSelectedApplications(prev => 
-                    selected 
-                      ? [...prev, id]
-                      : prev.filter(appId => appId !== id)
-                  );
-                }}
-              />
-            ))}
-          </TableBody>
-        </Table>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[30px]"></TableHead>
+                  <TableHead>Company</TableHead>
+                  <TableHead>Position</TableHead>
+                  <TableHead>Location</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredApplications.map((app) => (
+                  <ApplicationRow
+                    key={app.id}
+                    application={app}
+                    onDelete={handleDelete}
+                    onEdit={(updatedApp) => {
+                      const updatedApps = applications.map(a => 
+                        a.id === updatedApp.id ? updatedApp : a
+                      );
+                      setApplications(updatedApps);
+                    }}
+                    onClone={handleClone}
+                    getStatusColor={getStatusColor}
+                    isSelected={selectedApplications.includes(app.id)}
+                    onSelect={(id, selected) => {
+                      setSelectedApplications(prev => 
+                        selected 
+                          ? [...prev, id]
+                          : prev.filter(appId => appId !== id)
+                      );
+                    }}
+                  />
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <JobRecommendations />
+        </div>
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
