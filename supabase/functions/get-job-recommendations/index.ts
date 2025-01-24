@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -22,47 +21,97 @@ serve(async (req) => {
     const { userId } = await req.json();
     console.log('Processing request for user:', userId);
 
-    // Fetch user profile and recent applications
+    // Fetch user profile
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
 
-    const { data: recentApplications } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(5);
-
     console.log('Retrieved profile:', profile);
-    console.log('Recent applications:', recentApplications);
 
-    // Generate recommendations based on profile and applications
-    const recommendations = [
+    // Fetch user's feedback history
+    const { data: feedbackHistory } = await supabase
+      .from('job_recommendation_feedback')
+      .select('*')
+      .eq('user_id', userId);
+
+    console.log('Retrieved feedback history:', feedbackHistory);
+
+    // Analyze feedback to determine preferences
+    const likedRoles = new Set(
+      feedbackHistory
+        ?.filter(f => f.feedback)
+        .map(f => f.role.toLowerCase())
+    );
+    
+    const likedCompanies = new Set(
+      feedbackHistory
+        ?.filter(f => f.feedback)
+        .map(f => f.company.toLowerCase())
+    );
+
+    // Generate base recommendations
+    const baseRecommendations = [
       {
-        role: profile?.position ? `Senior ${profile.position}` : "Software Engineer",
+        role: "Software Engineer",
         companies: ["Google", "Microsoft", "Amazon"],
-        reasoning: "Based on your current role and skills, these tech giants would be a great next step in your career.",
-        skillsToHighlight: profile?.skills?.slice(0, 3) || ["JavaScript", "React", "TypeScript"],
-        skillsToDevelope: ["System Design", "Cloud Architecture", "Team Leadership"]
+        jobLinks: [
+          { company: "Google", url: "https://careers.google.com/jobs/results/" },
+          { company: "Microsoft", url: "https://careers.microsoft.com/us/en/search-results" },
+          { company: "Amazon", url: "https://www.amazon.jobs/en/" }
+        ]
       },
       {
-        role: "Tech Lead",
+        role: "Frontend Developer",
+        companies: ["Meta", "Apple", "Netflix"],
+        jobLinks: [
+          { company: "Meta", url: "https://www.metacareers.com/" },
+          { company: "Apple", url: "https://www.apple.com/careers/us/" },
+          { company: "Netflix", url: "https://jobs.netflix.com/" }
+        ]
+      },
+      {
+        role: "Full Stack Developer",
         companies: ["Stripe", "Square", "Shopify"],
-        reasoning: "Your experience in software development and recent applications show you're ready for a leadership role.",
-        skillsToHighlight: profile?.skills?.slice(0, 3) || ["Project Management", "Technical Architecture", "Mentorship"],
-        skillsToDevelope: ["Strategic Planning", "Cross-functional Leadership", "Product Strategy"]
-      },
-      {
-        role: "Engineering Manager",
-        companies: ["Meta", "LinkedIn", "Twitter"],
-        reasoning: "With your background, transitioning into engineering management could be a natural progression.",
-        skillsToHighlight: profile?.skills?.slice(0, 3) || ["Team Leadership", "Technical Strategy", "Communication"],
-        skillsToDevelope: ["People Management", "Organizational Development", "Budget Planning"]
+        jobLinks: [
+          { company: "Stripe", url: "https://stripe.com/jobs" },
+          { company: "Square", url: "https://careers.squareup.com/us/en" },
+          { company: "Shopify", url: "https://www.shopify.com/careers" }
+        ]
       }
     ];
+
+    // Customize recommendations based on profile and feedback
+    const recommendations = baseRecommendations.map(rec => {
+      // Prioritize recommendations similar to liked roles/companies
+      const relevanceScore = 
+        (likedRoles.has(rec.role.toLowerCase()) ? 2 : 0) +
+        rec.companies.reduce((score, company) => 
+          score + (likedCompanies.has(company.toLowerCase()) ? 1 : 0), 0);
+
+      return {
+        ...rec,
+        reasoning: `Based on your profile${profile?.position ? ` as a ${profile.position}` : ''} and your feedback history, 
+                   this role aligns with your interests${relevanceScore > 0 ? ' and previous preferences' : ''}.`,
+        skillsToHighlight: [
+          ...(profile?.skills?.slice(0, 3) || ["JavaScript", "React", "TypeScript"]),
+          "Problem Solving",
+          "Communication"
+        ],
+        skillsToDevelope: [
+          "System Design",
+          "Cloud Architecture",
+          "Team Leadership",
+          "Technical Architecture"
+        ]
+      };
+    }).sort((a, b) => {
+      // Sort by relevance to user's preferences
+      const scoreA = likedRoles.has(a.role.toLowerCase()) ? 2 : 0;
+      const scoreB = likedRoles.has(b.role.toLowerCase()) ? 2 : 0;
+      return scoreB - scoreA;
+    });
 
     console.log('Generated recommendations:', recommendations);
 
