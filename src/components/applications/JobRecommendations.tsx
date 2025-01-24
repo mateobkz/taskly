@@ -20,6 +20,7 @@ const JobRecommendations = () => {
   const { toast } = useToast();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Query for job recommendations
   const { data: recommendations, refetch, isLoading } = useQuery({
     queryKey: ['jobRecommendations'],
     queryFn: async () => {
@@ -27,11 +28,17 @@ const JobRecommendations = () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('No user found');
 
+        console.log('Fetching recommendations for user:', user.id);
         const { data, error } = await supabase.functions.invoke('get-job-recommendations', {
           body: { userId: user.id },
         });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error from edge function:', error);
+          throw error;
+        }
+
+        console.log('Received recommendations:', data);
         return data.recommendations as JobRecommendation[];
       } catch (error) {
         console.error('Error fetching recommendations:', error);
@@ -46,14 +53,56 @@ const JobRecommendations = () => {
     enabled: true,
   });
 
+  // Query for user's feedback history
+  const { data: feedbackHistory } = useQuery({
+    queryKey: ['jobFeedback'],
+    queryFn: async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No user found');
+
+        console.log('Fetching feedback history for user:', user.id);
+        const { data, error } = await supabase
+          .from('job_recommendation_feedback')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        console.log('Retrieved feedback history:', data);
+        return data;
+      } catch (error) {
+        console.error('Error fetching feedback history:', error);
+        return [];
+      }
+    },
+    enabled: true,
+  });
+
   const handleRefresh = async () => {
+    console.log('Refreshing recommendations...');
     setIsRefreshing(true);
-    await refetch();
-    setIsRefreshing(false);
+    try {
+      await refetch();
+      toast({
+        title: "Success",
+        description: "Recommendations refreshed successfully",
+      });
+    } catch (error) {
+      console.error('Error refreshing recommendations:', error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh recommendations",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const handleFeedback = async (role: string, company: string, isPositive: boolean) => {
     try {
+      console.log('Submitting feedback:', { role, company, isPositive });
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('No user found');
 
@@ -70,6 +119,9 @@ const JobRecommendations = () => {
 
       if (error) throw error;
 
+      // Refresh recommendations after feedback
+      await refetch();
+
       toast({
         title: "Feedback Recorded",
         description: `Thanks for your feedback on ${role} at ${company}!`,
@@ -82,6 +134,15 @@ const JobRecommendations = () => {
         variant: "destructive",
       });
     }
+  };
+
+  // Helper function to check if user has already given feedback
+  const hasFeedback = (role: string, company: string, isPositive: boolean) => {
+    return feedbackHistory?.some(
+      (f) => f.role === role && 
+             f.company === company && 
+             f.feedback === isPositive
+    );
   };
 
   if (isLoading) {
@@ -129,7 +190,11 @@ const JobRecommendations = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleFeedback(rec.role, rec.companies[0], true)}
-                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                  className={`${
+                    hasFeedback(rec.role, rec.companies[0], true)
+                      ? 'bg-green-100'
+                      : ''
+                  } text-green-600 hover:text-green-700 hover:bg-green-50`}
                 >
                   <Heart className="h-4 w-4" />
                 </Button>
@@ -137,7 +202,11 @@ const JobRecommendations = () => {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleFeedback(rec.role, rec.companies[0], false)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className={`${
+                    hasFeedback(rec.role, rec.companies[0], false)
+                      ? 'bg-red-100'
+                      : ''
+                  } text-red-600 hover:text-red-700 hover:bg-red-50`}
                 >
                   <HeartCrack className="h-4 w-4" />
                 </Button>
