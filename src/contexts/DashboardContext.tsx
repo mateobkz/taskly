@@ -73,10 +73,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      console.log('Fetched dashboards:', data);
       setDashboards(data || []);
       
       // Set first dashboard as current if none selected
       if (!currentDashboard && data && data.length > 0) {
+        console.log('Setting initial dashboard:', data[0]);
         setCurrentDashboard(data[0]);
       }
       
@@ -89,6 +91,17 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleDashboardChange = async (dashboard: Dashboard) => {
+    console.log('Changing to dashboard:', dashboard);
+    setCurrentDashboard(dashboard);
+    
+    // Notify user of dashboard change
+    toast({
+      title: "Dashboard Changed",
+      description: `Switched to ${dashboard.name}`,
+    });
   };
 
   const createDashboard = async (data: Partial<Dashboard>) => {
@@ -118,16 +131,18 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      console.log('Created new dashboard:', newDashboard);
       setDashboards(prev => [...prev, newDashboard]);
+      
+      // Set as current if it's the first dashboard
+      if (dashboards.length === 0) {
+        handleDashboardChange(newDashboard);
+      }
+
       toast({
         title: "Success",
         description: "Dashboard created successfully",
       });
-      
-      // Set as current if it's the first dashboard
-      if (dashboards.length === 0) {
-        setCurrentDashboard(newDashboard);
-      }
     } catch (error) {
       console.error('Error creating dashboard:', error);
       toast({
@@ -156,9 +171,12 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      console.log('Updated dashboard:', updatedDashboard);
       setDashboards(prev => prev.map(d => d.id === id ? updatedDashboard : d));
+      
+      // Update current dashboard if it's the one being modified
       if (currentDashboard?.id === id) {
-        setCurrentDashboard(updatedDashboard);
+        handleDashboardChange(updatedDashboard);
       }
 
       toast({
@@ -197,12 +215,13 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
 
       if (error) throw error;
 
+      console.log('Deleted dashboard:', id);
       setDashboards(prev => prev.filter(d => d.id !== id));
       
       // If current dashboard was deleted, switch to first available
       if (currentDashboard?.id === id) {
         const remainingDashboards = dashboards.filter(d => d.id !== id);
-        setCurrentDashboard(remainingDashboards[0]);
+        handleDashboardChange(remainingDashboards[0]);
       }
 
       toast({
@@ -224,7 +243,7 @@ export function DashboardProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentDashboard,
         dashboards,
-        setCurrentDashboard,
+        setCurrentDashboard: handleDashboardChange,
         createDashboard,
         renameDashboard,
         deleteDashboard,

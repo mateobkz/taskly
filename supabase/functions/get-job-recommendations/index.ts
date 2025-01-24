@@ -21,7 +21,7 @@ serve(async (req) => {
     const { userId } = await req.json();
     console.log('Processing request for user:', userId);
 
-    // Fetch user profile
+    // Fetch user profile with skills and experience
     const { data: profile } = await supabase
       .from('profiles')
       .select('*')
@@ -29,6 +29,29 @@ serve(async (req) => {
       .single();
 
     console.log('Retrieved profile:', profile);
+
+    // Fetch user's tasks to analyze experience
+    const { data: tasks } = await supabase
+      .from('tasks')
+      .select('skills_acquired, difficulty')
+      .eq('user_id', userId);
+
+    console.log('Retrieved tasks:', tasks);
+
+    // Extract all skills from tasks
+    const taskSkills = new Set(
+      tasks?.flatMap(task => 
+        task.skills_acquired.split(',').map(s => s.trim().toLowerCase())
+      ) || []
+    );
+
+    // Combine profile skills and task skills
+    const allUserSkills = new Set([
+      ...(profile?.skills || []).map(s => s.toLowerCase()),
+      ...taskSkills
+    ]);
+
+    console.log('Combined user skills:', Array.from(allUserSkills));
 
     // Fetch user's feedback history
     const { data: feedbackHistory } = await supabase
@@ -63,106 +86,140 @@ serve(async (req) => {
         .map(f => f.company.toLowerCase())
     );
 
-    // Generate base recommendations with more variety
-    const allRecommendations = [
-      {
-        role: "Software Engineer",
-        companies: ["Google", "Microsoft", "Amazon"],
-        jobLinks: [
-          { company: "Google", url: "https://careers.google.com/jobs/results/" },
-          { company: "Microsoft", url: "https://careers.microsoft.com/us/en/search-results" },
-          { company: "Amazon", url: "https://www.amazon.jobs/en/" }
-        ]
-      },
-      {
-        role: "Frontend Developer",
-        companies: ["Meta", "Apple", "Netflix"],
-        jobLinks: [
-          { company: "Meta", url: "https://www.metacareers.com/" },
-          { company: "Apple", url: "https://www.apple.com/careers/us/" },
-          { company: "Netflix", url: "https://jobs.netflix.com/" }
-        ]
-      },
-      {
-        role: "Full Stack Developer",
-        companies: ["Stripe", "Square", "Shopify"],
-        jobLinks: [
-          { company: "Stripe", url: "https://stripe.com/jobs" },
-          { company: "Square", url: "https://careers.squareup.com/us/en" },
-          { company: "Shopify", url: "https://www.shopify.com/careers" }
-        ]
-      },
-      {
-        role: "Backend Engineer",
-        companies: ["LinkedIn", "Twitter", "Uber"],
-        jobLinks: [
-          { company: "LinkedIn", url: "https://careers.linkedin.com/" },
-          { company: "Twitter", url: "https://careers.twitter.com/" },
-          { company: "Uber", url: "https://www.uber.com/us/en/careers/" }
-        ]
-      },
-      {
-        role: "DevOps Engineer",
-        companies: ["GitLab", "Docker", "HashiCorp"],
-        jobLinks: [
-          { company: "GitLab", url: "https://about.gitlab.com/jobs/" },
-          { company: "Docker", url: "https://www.docker.com/careers/" },
-          { company: "HashiCorp", url: "https://www.hashicorp.com/jobs" }
-        ]
-      }
-    ];
+    // Define role categories based on skills
+    const roleCategories = {
+      frontend: ['react', 'javascript', 'typescript', 'css', 'html'],
+      backend: ['python', 'java', 'node', 'sql', 'api'],
+      fullstack: ['react', 'node', 'javascript', 'api', 'fullstack'],
+      devops: ['aws', 'docker', 'kubernetes', 'ci/cd', 'linux'],
+      mobile: ['react native', 'ios', 'android', 'swift', 'kotlin'],
+      ai: ['python', 'machine learning', 'tensorflow', 'pytorch', 'data science']
+    };
 
-    // Filter out disliked roles and companies
-    let filteredRecommendations = allRecommendations.filter(rec => {
-      const isRoleDisliked = dislikedRoles.has(rec.role.toLowerCase());
-      const areAllCompaniesDisliked = rec.companies.every(company => 
-        dislikedCompanies.has(company.toLowerCase())
-      );
-      return !isRoleDisliked && !areAllCompaniesDisliked;
-    });
-
-    // If no recommendations left after filtering, reset to all recommendations
-    if (filteredRecommendations.length === 0) {
-      filteredRecommendations = allRecommendations;
-    }
-
-    // Score and sort recommendations based on likes
-    const scoredRecommendations = filteredRecommendations.map(rec => {
-      let score = 0;
+    // Generate recommendations based on skill matches
+    const generateRecommendations = () => {
+      const recommendations = [];
       
-      // Add points for liked roles
-      if (likedRoles.has(rec.role.toLowerCase())) {
-        score += 3;
-      }
-      
-      // Add points for each liked company
-      rec.companies.forEach(company => {
-        if (likedCompanies.has(company.toLowerCase())) {
-          score += 1;
-        }
+      // Calculate skill match for each role category
+      const categoryMatches = Object.entries(roleCategories).map(([category, skills]) => {
+        const matchCount = skills.filter(skill => 
+          Array.from(allUserSkills).some(userSkill => 
+            userSkill.includes(skill) || skill.includes(userSkill)
+          )
+        ).length;
+        return { category, matchScore: matchCount / skills.length };
       });
-      
-      return { ...rec, score };
-    }).sort((a, b) => b.score - a.score);
 
-    // Take top 3 recommendations and add context
-    const recommendations = scoredRecommendations.slice(0, 3).map(rec => ({
-      ...rec,
-      reasoning: `Based on your profile${profile?.position ? ` as a ${profile.position}` : ''} and your feedback history, 
-                 this role aligns with your interests${rec.score > 0 ? ' and previous preferences' : ''}.`,
-      skillsToHighlight: [
-        ...(profile?.skills?.slice(0, 3) || ["JavaScript", "React", "TypeScript"]),
-        "Problem Solving",
-        "Communication"
-      ],
-      skillsToDevelope: [
-        "System Design",
-        "Cloud Architecture",
-        "Team Leadership",
-        "Technical Architecture"
-      ]
-    }));
+      // Sort categories by match score
+      categoryMatches.sort((a, b) => b.matchScore - a.matchScore);
+      console.log('Category matches:', categoryMatches);
 
+      // Generate recommendations for top matching categories
+      for (const { category, matchScore } of categoryMatches) {
+        if (matchScore > 0.2) { // Only recommend if there's at least some skill match
+          let recommendation;
+          switch (category) {
+            case 'frontend':
+              recommendation = {
+                role: "Frontend Developer",
+                companies: ["Meta", "Airbnb", "Spotify"],
+                jobLinks: [
+                  { company: "Meta", url: "https://www.metacareers.com/jobs" },
+                  { company: "Airbnb", url: "https://careers.airbnb.com" },
+                  { company: "Spotify", url: "https://www.spotifyjobs.com/search-jobs" }
+                ]
+              };
+              break;
+            case 'backend':
+              recommendation = {
+                role: "Backend Engineer",
+                companies: ["Amazon", "Stripe", "MongoDB"],
+                jobLinks: [
+                  { company: "Amazon", url: "https://www.amazon.jobs" },
+                  { company: "Stripe", url: "https://stripe.com/jobs" },
+                  { company: "MongoDB", url: "https://www.mongodb.com/careers" }
+                ]
+              };
+              break;
+            case 'fullstack':
+              recommendation = {
+                role: "Full Stack Developer",
+                companies: ["Shopify", "GitHub", "Digital Ocean"],
+                jobLinks: [
+                  { company: "Shopify", url: "https://www.shopify.com/careers" },
+                  { company: "GitHub", url: "https://github.com/about/careers" },
+                  { company: "Digital Ocean", url: "https://www.digitalocean.com/careers" }
+                ]
+              };
+              break;
+            case 'devops':
+              recommendation = {
+                role: "DevOps Engineer",
+                companies: ["Google Cloud", "AWS", "Microsoft Azure"],
+                jobLinks: [
+                  { company: "Google Cloud", url: "https://careers.google.com" },
+                  { company: "AWS", url: "https://aws.amazon.com/careers" },
+                  { company: "Microsoft Azure", url: "https://careers.microsoft.com" }
+                ]
+              };
+              break;
+            case 'mobile':
+              recommendation = {
+                role: "Mobile Developer",
+                companies: ["Apple", "Uber", "Instagram"],
+                jobLinks: [
+                  { company: "Apple", url: "https://www.apple.com/careers" },
+                  { company: "Uber", url: "https://www.uber.com/us/en/careers" },
+                  { company: "Instagram", url: "https://www.instagram.com/about/jobs" }
+                ]
+              };
+              break;
+            case 'ai':
+              recommendation = {
+                role: "AI Engineer",
+                companies: ["OpenAI", "DeepMind", "Anthropic"],
+                jobLinks: [
+                  { company: "OpenAI", url: "https://openai.com/careers" },
+                  { company: "DeepMind", url: "https://deepmind.com/careers" },
+                  { company: "Anthropic", url: "https://www.anthropic.com/careers" }
+                ]
+              };
+              break;
+          }
+
+          if (recommendation) {
+            // Filter out disliked roles and companies
+            if (!dislikedRoles.has(recommendation.role.toLowerCase())) {
+              recommendation.companies = recommendation.companies.filter(
+                company => !dislikedCompanies.has(company.toLowerCase())
+              );
+              recommendation.jobLinks = recommendation.jobLinks.filter(
+                link => !dislikedCompanies.has(link.company.toLowerCase())
+              );
+
+              if (recommendation.companies.length > 0) {
+                recommendations.push({
+                  ...recommendation,
+                  reasoning: `Based on your ${Array.from(allUserSkills).slice(0, 3).join(', ')} skills${
+                    profile?.position ? ` and experience as ${profile.position}` : ''
+                  }, this ${category} role aligns well with your profile.`,
+                  skillsToHighlight: Array.from(allUserSkills).slice(0, 5),
+                  skillsToDevelope: roleCategories[category].filter(
+                    skill => !Array.from(allUserSkills).some(userSkill => 
+                      userSkill.includes(skill) || skill.includes(userSkill)
+                    )
+                  )
+                });
+              }
+            }
+          }
+        }
+      }
+
+      return recommendations;
+    };
+
+    const recommendations = generateRecommendations();
     console.log('Generated recommendations:', recommendations);
 
     return new Response(JSON.stringify({ recommendations }), {
