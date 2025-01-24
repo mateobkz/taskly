@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Calendar, Copy, Edit, Trash2, Check, X, FileText } from "lucide-react";
+import { Calendar, Copy, Edit, Trash2, Check, X, FileText, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -161,7 +161,21 @@ const ApplicationRow = ({
           onCheckedChange={(checked) => onSelect(application.id, checked as boolean)}
         />
       </TableCell>
-      <TableCell className="font-medium">{application.company_name}</TableCell>
+      <TableCell className="font-medium">
+        <div className="flex items-center gap-2">
+          {application.company_name}
+          {application.application_url && (
+            <a
+              href={application.application_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80"
+            >
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          )}
+        </div>
+      </TableCell>
       <TableCell>{application.position}</TableCell>
       <TableCell>{application.location}</TableCell>
       <TableCell>
