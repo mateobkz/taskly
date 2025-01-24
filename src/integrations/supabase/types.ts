@@ -409,6 +409,41 @@ export type Database = {
           },
         ]
       }
+      job_recommendation_feedback: {
+        Row: {
+          company: string
+          created_at: string
+          feedback: boolean
+          id: number
+          role: string
+          user_id: string | null
+        }
+        Insert: {
+          company: string
+          created_at?: string
+          feedback: boolean
+          id?: number
+          role: string
+          user_id?: string | null
+        }
+        Update: {
+          company?: string
+          created_at?: string
+          feedback?: boolean
+          id?: number
+          role?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_recommendation_feedback_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string

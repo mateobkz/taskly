@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, RefreshCw } from "lucide-react";
+import { ExternalLink, Heart, HeartCrack, Lightbulb, RefreshCw } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 
 interface JobRecommendation {
@@ -13,6 +13,7 @@ interface JobRecommendation {
   reasoning: string;
   skillsToHighlight: string[];
   skillsToDevelope: string[];
+  jobLinks?: { company: string; url: string }[];
 }
 
 const JobRecommendations = () => {
@@ -49,6 +50,38 @@ const JobRecommendations = () => {
     setIsRefreshing(true);
     await refetch();
     setIsRefreshing(false);
+  };
+
+  const handleFeedback = async (role: string, company: string, isPositive: boolean) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('No user found');
+
+      const { error } = await supabase
+        .from('job_recommendation_feedback')
+        .insert([
+          {
+            user_id: user.id,
+            role,
+            company,
+            feedback: isPositive,
+          }
+        ]);
+
+      if (error) throw error;
+
+      toast({
+        title: "Feedback Recorded",
+        description: `Thanks for your feedback on ${role} at ${company}!`,
+      });
+    } catch (error) {
+      console.error('Error saving feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save feedback",
+        variant: "destructive",
+      });
+    }
   };
 
   if (isLoading) {
@@ -89,15 +122,47 @@ const JobRecommendations = () => {
       <CardContent className="space-y-6">
         {recommendations?.map((rec, index) => (
           <div key={index} className="space-y-4 p-4 rounded-lg bg-white/50">
-            <h3 className="text-lg font-semibold">{rec.role}</h3>
+            <div className="flex justify-between items-start">
+              <h3 className="text-lg font-semibold">{rec.role}</h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFeedback(rec.role, rec.companies[0], true)}
+                  className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                >
+                  <Heart className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleFeedback(rec.role, rec.companies[0], false)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <HeartCrack className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
             
             <div className="space-y-2">
               <p className="text-sm font-medium">Target Companies:</p>
               <div className="flex flex-wrap gap-2">
                 {rec.companies.map((company, idx) => (
-                  <Badge key={idx} variant="secondary">
-                    {company}
-                  </Badge>
+                  <div key={idx} className="flex items-center gap-2">
+                    <Badge variant="secondary">
+                      {company}
+                    </Badge>
+                    {rec.jobLinks?.find(link => link.company === company) && (
+                      <a
+                        href={rec.jobLinks.find(link => link.company === company)?.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
