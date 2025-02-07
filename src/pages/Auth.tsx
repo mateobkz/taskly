@@ -133,7 +133,7 @@ const Auth = () => {
                       inputBorderHover: 'hsl(var(--border))',
                       inputPlaceholder: 'hsl(var(--muted-foreground))',
                     },
-                    borderRadii: {
+                    radii: {
                       borderRadiusButton: 'var(--radius)',
                       buttonBorderRadius: 'var(--radius)',
                       inputBorderRadius: 'var(--radius)',
