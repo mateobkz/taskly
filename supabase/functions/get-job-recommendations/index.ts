@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import { serve } from 'https://deno.fresh.dev/std@v9.6.1/http/server.ts';
-import { corsHeaders } from '../_shared/cors.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { corsHeaders } from '../_shared/cors.ts'
 
 interface UserProfile {
   skills: string[];
